@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const runtime = 'edge';
+
 let initialMenu = [
   { id: "pb-sandwich", name: "Peanut Butter Banana Sandwich", price: 50, category: "Sandwich", badge: "Protein Rich", description: "Creamy peanut butter and fresh, sweet banana slices layered for a classic, protein-packed energy boost.", image: "/images/menu_poster.jpeg", inStock: true },
   { id: "chia-pudding", name: "Superfood Chia Pudding", price: 55, category: "Pudding", badge: "Energy Boost", description: "A velvety, nutrient-rich delight with a perfectly creamy texture and a hint of natural sweetness.", image: "/images/hero_poster.jpeg", inStock: true },

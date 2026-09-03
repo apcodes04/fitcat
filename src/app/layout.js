@@ -1,5 +1,7 @@
 import "./globals.css";
 
+export const runtime = 'edge';
+
 export const metadata = {
   title: "Fitcat | Fuel Your Day The Healthy Way | Vikhroli East Mumbai",
   description: "Fresh, natural, and nourishing healthy morning breakfasts at Vikhroli East Railway Station. Pre-book your Peanut Butter Banana Sandwich, Chia Pudding, Oats, and Fruit Bowls.",
