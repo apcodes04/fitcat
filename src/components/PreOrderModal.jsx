@@ -18,9 +18,14 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
   const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Subscribe to live menu items & prices from Firestore
   useEffect(() => {
+    if (!isOpen) {
+      setIsSubmitting(false);
+      setIsSubmitted(false);
+    }
     const unsubscribe = subscribeToMenuItems((liveItems) => {
       const inStockItems = liveItems.filter((item) => item.inStock !== false);
       setMenuItems(inStockItems);
@@ -34,7 +39,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
       }
     });
     return () => unsubscribe && unsubscribe();
-  }, [initialItem]);
+  }, [initialItem, isOpen]);
 
   if (!isOpen) return null;
 
@@ -76,8 +81,11 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
     return orderItems.reduce((sum, item) => sum + item.qty * item.price, 0);
   };
 
-  const handleWhatsAppSubmit = async (e) => {
+  const handleWhatsAppSubmit = (e) => {
     e.preventDefault();
+
+    // Prevent duplicate submission / clicks
+    if (isSubmitting || isSubmitted) return;
 
     if (orderItems.length === 0) {
       alert("Please add at least 1 item to your order using the 'Add Items' button!");
@@ -85,6 +93,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
     }
 
     setIsSubmitting(true);
+    setIsSubmitted(true);
 
     const formattedDateText = formatBookingDateText(bookingDate);
 
@@ -127,13 +136,12 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
 
     const whatsappUrl = `https://api.whatsapp.com/send?phone=917977034609&text=${encodeURIComponent(text)}`;
 
-    // 3. Use direct window.location.href so Instagram in-app browser & iOS Safari launch WhatsApp deep-link instantly
-    window.location.href = whatsappUrl;
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      onClose();
-    }, 500);
+    // 3. Guaranteed instant redirection to WhatsApp
+    try {
+      window.location.href = whatsappUrl;
+    } catch (err) {
+      window.open(whatsappUrl, "_self");
+    }
   };
 
   return (
@@ -363,11 +371,11 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
             </div>
             <button
               type="submit"
-              disabled={isSubmitting || orderItems.length === 0}
-              className="bg-green-600 hover:bg-green-500 text-white font-black py-3 px-6 rounded-xl shadow-lg flex items-center gap-2 transition hover:scale-105 disabled:opacity-50"
+              disabled={isSubmitting || isSubmitted || orderItems.length === 0}
+              className="bg-green-600 hover:bg-green-500 text-white font-black py-3 px-6 rounded-xl shadow-lg flex items-center gap-2 transition hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <WhatsAppIcon className="w-5 h-5 fill-white" />
-              <span>{isSubmitting ? "Logging Order..." : "Send WhatsApp Pre-Order"}</span>
+              <span>{isSubmitted || isSubmitting ? "Opening WhatsApp..." : "Send WhatsApp Pre-Order"}</span>
             </button>
           </div>
         </form>
