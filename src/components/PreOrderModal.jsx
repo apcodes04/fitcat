@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { saveOrderToFirestore } from "@/lib/orders";
 
 const MENU_ITEMS = [
   { id: "pb-sandwich", name: "Peanut Butter Banana Sandwich", price: 50, category: "Sandwich" },
@@ -24,7 +25,9 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
   const [bookingDate, setBookingDate] = useState(tomorrowStr);
   const [timeSlot, setTimeSlot] = useState("07:00 AM");
   const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
@@ -39,7 +42,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
     return MENU_ITEMS.reduce((sum, item) => sum + (quantities[item.id] || 0) * item.price, 0);
   };
 
-  const handleWhatsAppSubmit = (e) => {
+  const handleWhatsAppSubmit = async (e) => {
     e.preventDefault();
     const selected = MENU_ITEMS.filter((item) => (quantities[item.id] || 0) > 0);
 
@@ -48,6 +51,23 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
       return;
     }
 
+    setIsSubmitting(true);
+
+    const orderPayload = {
+      customerName: customerName || "Customer",
+      customerPhone: customerPhone || "Not provided",
+      bookingDate,
+      timeSlot,
+      items: selected.map((i) => ({ name: i.name, qty: quantities[i.id], price: i.price })),
+      totalAmount: calculateTotal(),
+      notes,
+      source: "website_whatsapp",
+    };
+
+    // 1. Save order to Firebase Firestore
+    await saveOrderToFirestore(orderPayload);
+
+    // 2. Format WhatsApp Pre-Filled Message
     let orderSummary = selected
       .map((item) => `• ${item.name} x ${quantities[item.id]} (₹${item.price * quantities[item.id]})`)
       .join("\n");
@@ -55,6 +75,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
     const text = `🐾 *FITCAT PRE-BOOKING ORDER* 🐾\n` +
       `-----------------------------\n` +
       `👤 *Customer*: ${customerName || "Customer"}\n` +
+      (customerPhone ? `📞 *Phone*: ${customerPhone}\n` : "") +
       `📅 *Pre-Booking Date*: ${bookingDate}\n` +
       `⏰ *Pickup Time Slot*: ${timeSlot} (Store timings: 6:30 AM - 9:30 AM)\n` +
       `📍 *Location*: Vikhroli East Railway Station\n` +
@@ -68,6 +89,8 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
 
     const whatsappUrl = `https://wa.me/917977034609?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, "_blank");
+
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -106,6 +129,19 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
               />
             </div>
             <div>
+              <label className="block text-xs font-bold text-fitcat-gold mb-1">Phone Number (Optional)</label>
+              <input
+                type="tel"
+                placeholder="+91 9876543210"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                className="w-full bg-fitcat-darkgreen border border-fitcat-gold/40 rounded-lg p-2 text-sm text-fitcat-cream focus:outline-none focus:border-fitcat-gold"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
               <label className="block text-xs font-bold text-fitcat-gold mb-1">Pre-Booking Date</label>
               <input
                 type="date"
@@ -116,24 +152,22 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
                 className="w-full bg-fitcat-darkgreen border border-fitcat-gold/40 rounded-lg p-2 text-sm text-fitcat-cream focus:outline-none focus:border-fitcat-gold"
               />
             </div>
-          </div>
-
-          {/* Time Slot Picker */}
-          <div>
-            <label className="block text-xs font-bold text-fitcat-gold mb-1">Pickup Time (Store: 6:30 AM - 9:30 AM)</label>
-            <select
-              value={timeSlot}
-              onChange={(e) => setTimeSlot(e.target.value)}
-              className="w-full bg-fitcat-darkgreen border border-fitcat-gold/40 rounded-lg p-2 text-sm text-fitcat-cream focus:outline-none focus:border-fitcat-gold"
-            >
-              <option value="06:30 AM">06:30 AM (Opening Slot)</option>
-              <option value="07:00 AM">07:00 AM</option>
-              <option value="07:30 AM">07:30 AM</option>
-              <option value="08:00 AM">08:00 AM (Peak Rush)</option>
-              <option value="08:30 AM">08:30 AM</option>
-              <option value="09:00 AM">09:00 AM</option>
-              <option value="09:30 AM">09:30 AM (Last Call)</option>
-            </select>
+            <div>
+              <label className="block text-xs font-bold text-fitcat-gold mb-1">Pickup Time (Store: 6:30 AM - 9:30 AM)</label>
+              <select
+                value={timeSlot}
+                onChange={(e) => setTimeSlot(e.target.value)}
+                className="w-full bg-fitcat-darkgreen border border-fitcat-gold/40 rounded-lg p-2 text-sm text-fitcat-cream focus:outline-none focus:border-fitcat-gold"
+              >
+                <option value="06:30 AM">06:30 AM (Opening Slot)</option>
+                <option value="07:00 AM">07:00 AM</option>
+                <option value="07:30 AM">07:30 AM</option>
+                <option value="08:00 AM">08:00 AM (Peak Rush)</option>
+                <option value="08:30 AM">08:30 AM</option>
+                <option value="09:00 AM">09:00 AM</option>
+                <option value="09:30 AM">09:30 AM (Last Call)</option>
+              </select>
+            </div>
           </div>
 
           {/* Menu Item Selection */}
@@ -188,9 +222,10 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
             </div>
             <button
               type="submit"
-              className="bg-green-600 hover:bg-green-500 text-white font-black py-3 px-6 rounded-xl shadow-lg flex items-center gap-2 transition hover:scale-105"
+              disabled={isSubmitting}
+              className="bg-green-600 hover:bg-green-500 text-white font-black py-3 px-6 rounded-xl shadow-lg flex items-center gap-2 transition hover:scale-105 disabled:opacity-50"
             >
-              <span>💬</span> Send WhatsApp Pre-Order
+              <span>💬</span> {isSubmitting ? "Logging Order..." : "Send WhatsApp Pre-Order"}
             </button>
           </div>
         </form>

@@ -1,33 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
+import { auth, googleProvider } from "@/lib/firebase";
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    // Default admin session handler (credentials can be set later by user)
-    if ((email === "admin@fitcat.in" && password === "fitcat2026") || email.endsWith("@fitcat.in") || email === "harsh@fitcat.in") {
-      sessionStorage.setItem("fitcat_admin_authed", "true");
-      router.push("/admin");
-    } else {
-      // Allow demo login during setup
-      sessionStorage.setItem("fitcat_admin_authed", "true");
-      router.push("/admin");
-    }
+  // Helper to check if email is whitelisted in environment variables
+  const isAuthorizedEmail = (email) => {
+    if (!email) return false;
+    const allowedEmails = (process.env.NEXT_PUBLIC_ALLOWED_ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase());
+    return allowedEmails.includes(email.toLowerCase());
   };
 
-  const handleOAuthLogin = (provider) => {
-    // OAuth 2.0 Login Handler
-    alert(`Initiating OAuth 2.0 flow with ${provider}. (OAuth Credentials will be connected via Wrangler environment variables). Redirecting to Admin Dashboard...`);
-    sessionStorage.setItem("fitcat_admin_authed", "true");
-    router.push("/admin");
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && isAuthorizedEmail(user.email)) {
+        router.push("/admin");
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      if (isAuthorizedEmail(user.email)) {
+        router.push("/admin");
+      } else {
+        await signOut(auth);
+        setError(`⛔ Access Denied: (${user.email}) is not an authorized admin.`);
+      }
+    } catch (err) {
+      console.error("Google Sign-In Error:", err);
+      setError("Sign-in failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,14 +56,21 @@ export default function AdminLoginPage() {
         <div className="text-center space-y-2">
           <Logo className="h-16 w-auto mx-auto" />
           <h1 className="text-2xl font-black text-fitcat-gold">Admin Portal</h1>
-          <p className="text-xs text-fitcat-cream/80">Login to manage food prices, images & menu items</p>
+          <p className="text-xs text-fitcat-cream/80">Sign in with authorized Google OAuth account</p>
         </div>
 
-        {/* OAuth 2.0 Button */}
-        <div className="space-y-3 pt-2">
+        {error && (
+          <div className="bg-red-600/90 text-white text-xs font-bold p-3 rounded-xl border border-red-400 text-center animate-shake">
+            {error}
+          </div>
+        )}
+
+        {/* Google OAuth Button */}
+        <div className="space-y-4 pt-2">
           <button
-            onClick={() => handleOAuthLogin("Google OAuth 2.0")}
-            className="w-full bg-white hover:bg-slate-100 text-slate-900 font-bold py-3 px-4 rounded-xl border border-slate-300 shadow flex items-center justify-center gap-3 transition"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full bg-white hover:bg-slate-100 text-slate-900 font-bold py-3.5 px-4 rounded-xl border border-slate-300 shadow flex items-center justify-center gap-3 transition transform hover:scale-[1.02] disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -51,48 +78,19 @@ export default function AdminLoginPage() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
             </svg>
-            <span>Sign in with Google OAuth 2.0</span>
+            <span>{loading ? "Signing in..." : "Sign in with Google OAuth"}</span>
           </button>
 
-          <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-fitcat-gold/30"></div>
-            <span className="flex-shrink mx-4 text-xs text-fitcat-cream/60">OR CREDENTIALS</span>
-            <div className="flex-grow border-t border-fitcat-gold/30"></div>
-          </div>
+          <p className="text-[11px] text-fitcat-cream/60 text-center leading-relaxed">
+            Restricted access. Only authorized admin Google accounts can enter the Fitcat dashboard.
+          </p>
         </div>
 
-        {/* Credentials Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-fitcat-gold mb-1">Admin Email</label>
-            <input
-              type="email"
-              required
-              placeholder="admin@fitcat.in"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-fitcat-green border border-fitcat-gold/40 rounded-xl p-3 text-sm text-fitcat-cream focus:outline-none focus:border-fitcat-gold"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-fitcat-gold mb-1">Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-fitcat-green border border-fitcat-gold/40 rounded-xl p-3 text-sm text-fitcat-cream focus:outline-none focus:border-fitcat-gold"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-fitcat-gold hover:bg-yellow-500 text-fitcat-darkgreen font-black py-3 rounded-xl shadow-lg transition"
-          >
-            Log In to Admin Dashboard
-          </button>
-        </form>
+        <div className="pt-2 text-center">
+          <a href="/" className="text-xs text-fitcat-gold hover:underline font-semibold">
+            ← Back to Main Website
+          </a>
+        </div>
       </div>
     </div>
   );
