@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { saveOrderToFirestore } from "@/lib/orders";
+import { saveOrderToFirestore, formatBookingDateText } from "@/lib/orders";
 import { subscribeToMenuItems } from "@/lib/menu";
 import WhatsAppIcon from "./WhatsAppIcon";
 import { FaPlus, FaMinus, FaTrashCan, FaXmark, FaMoon } from "react-icons/fa6";
@@ -86,10 +86,12 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
 
     setIsSubmitting(true);
 
+    const formattedDateText = formatBookingDateText(bookingDate);
+
     const orderPayload = {
       customerName: customerName || "Customer",
       customerPhone: customerPhone || "Not provided",
-      bookingDate,
+      bookingDate: formattedDateText,
       timeSlot,
       items: orderItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
       totalAmount: calculateTotal(),
@@ -102,7 +104,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
       console.error("Firestore save error:", err)
     );
 
-    // 2. Format WhatsApp Pre-Filled Message with clean standard emojis
+    // 2. Format WhatsApp Pre-Filled Message with clean standard emojis & ordinal date
     let orderSummary = orderItems
       .map((item) => `• ${item.name} x ${item.qty} (₹${item.price * item.qty})`)
       .join("\n");
@@ -112,7 +114,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
       `-----------------------------\n` +
       `👤 *Customer*: ${customerName || "Customer"}\n` +
       (customerPhone ? `📞 *Phone*: ${customerPhone}\n` : "") +
-      `📅 *Pre-Booking Date*: ${bookingDate}\n` +
+      `📅 *Pre-Booking Date*: ${formattedDateText}\n` +
       `⏰ *Pickup Time Slot*: ${timeSlot} (Store timings: 6:30 AM to 9:30 AM)\n` +
       `📍 *Location*: Vikhroli East Railway Station\n` +
       `-----------------------------\n` +
@@ -200,6 +202,9 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
                 onChange={(e) => setBookingDate(e.target.value)}
                 className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
               />
+              <p className="text-[11px] text-[#E5C158] mt-1 font-semibold">
+                📅 Selected: <strong>{formatBookingDateText(bookingDate)}</strong>
+              </p>
             </div>
             <div>
               <label className="block text-xs font-bold text-[#E5C158] mb-1">Pickup Time Slot (15 min)</label>

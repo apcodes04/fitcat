@@ -1,5 +1,38 @@
-import { db } from "./firebase";
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc } from "firebase/firestore";
+// Format dates to DD Month YYYY text format (e.g. 8th Sept, 2026)
+export function formatBookingDateText(dateStr) {
+  if (!dateStr) return "";
+
+  if (typeof dateStr === "string" && (dateStr.includes("st") || dateStr.includes("nd") || dateStr.includes("rd") || dateStr.includes("th"))) {
+    return dateStr;
+  }
+
+  let dateObj;
+  if (typeof dateStr === "string" && dateStr.includes("-")) {
+    const parts = dateStr.split("-").map(Number);
+    if (parts.length === 3) {
+      dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    } else {
+      dateObj = new Date(dateStr);
+    }
+  } else {
+    dateObj = new Date(dateStr);
+  }
+
+  if (isNaN(dateObj.getTime())) return dateStr;
+
+  const dayNum = dateObj.getDate();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+  const monthName = monthNames[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+
+  const getOrdinalSuffix = (n) => {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
+
+  return `${getOrdinalSuffix(dayNum)} ${monthName}, ${year}`;
+}
 
 // Save a new WhatsApp Pre-Order to Firestore
 export async function saveOrderToFirestore(orderData) {

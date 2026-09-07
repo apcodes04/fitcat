@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { subscribeToOrders, updateOrderStatusInFirestore, updateOrderInFirestore, deleteOrderFromFirestore } from "@/lib/orders";
+import { subscribeToOrders, updateOrderStatusInFirestore, updateOrderInFirestore, deleteOrderFromFirestore, formatBookingDateText } from "@/lib/orders";
 import { subscribeToMenuItems, saveMenuItemToFirestore, deleteMenuItemFromFirestore } from "@/lib/menu";
 import { 
   FaChartSimple, 
@@ -325,7 +325,7 @@ export default function AdminDashboardPage() {
                         <div className="flex flex-wrap items-center gap-3 text-xs text-[#E5C158]">
                           <span className="inline-flex items-center gap-1">
                             <FaCalendarDays className="text-[10px] text-[#05c92f]" />
-                            <span>Date: <strong>{order.bookingDate}</strong></span>
+                            <span>Date: <strong>{formatBookingDateText(order.bookingDate)}</strong></span>
                           </span>
                           <span>•</span>
                           <span className="inline-flex items-center gap-1">
