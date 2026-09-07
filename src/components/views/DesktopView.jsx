@@ -8,32 +8,13 @@ import FoodCard from "../FoodCard";
 import WhatsAppIcon from "../WhatsAppIcon";
 import InstagramIcon from "../InstagramIcon";
 import { subscribeToMenuItems } from "@/lib/menu";
-import { FaLocationDot, FaLeaf, FaBolt, FaHeart, FaUserTie, FaPhone, FaCalendarDays, FaClock, FaChevronLeft, FaChevronRight } from "react-icons/fa6";
+import { FaLocationDot, FaLeaf, FaBolt, FaHeart, FaUserTie, FaPhone, FaCalendarDays, FaClock } from "react-icons/fa6";
 import { MdOutlineEnergySavingsLeaf } from "react-icons/md";
-
-const DESKTOP_POSTERS = [
-  {
-    src: "/images/hero_poster.jpeg",
-    title: "Good Food • Good Mood",
-    subtitle: "Fitcat Daily Special Poster",
-  },
-  {
-    src: "/images/menu_poster.jpeg",
-    title: "Healthy Sugar-Free Menu",
-    subtitle: "Official Outlet Menu",
-  },
-  {
-    src: "/images/business_card.jpeg",
-    title: "Vikhroli East Station Outlet",
-    subtitle: "Store Location & Contact Card",
-  },
-];
 
 export default function DesktopView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
-  const [posterIdx, setPosterIdx] = useState(0);
 
   useEffect(() => {
     const unsubscribe = subscribeToMenuItems((liveItems) => {
@@ -107,118 +88,65 @@ export default function DesktopView() {
       </header>
 
       {/* Desktop Hero Section */}
-      <section id="hero" className="relative px-8 py-16 max-w-7xl mx-auto grid grid-cols-12 gap-8 items-center">
-        <div className="col-span-7 space-y-6">
-          <div className="inline-block bg-[#0e2413] border border-[#1b4224] text-[#05c92f] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-            Eat Clean. Feel Great.
-          </div>
-          <h1 className="text-5xl font-extrabold text-[#FAF9F5] leading-tight">
-            FUEL YOUR DAY <br />
-            <span className="text-[#05c92f] italic font-serif text-6xl">The Healthy Way</span>
-          </h1>
-          <p className="text-[#9A978F] text-lg leading-relaxed max-w-xl">
-            Fresh, natural, and nourishing sugar-free breakfast bowls, sandwiches, and superfood chia puddings. Made fresh daily at Vikhroli East Railway Station.
-          </p>
+      <section id="hero" className="relative px-8 py-16 max-w-5xl mx-auto text-center flex flex-col items-center justify-center space-y-6">
+        <div className="inline-block bg-[#0e2413] border border-[#1b4224] text-[#05c92f] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+          Eat Clean. Feel Great.
+        </div>
+        <h1 className="text-5xl lg:text-6xl font-extrabold text-[#FAF9F5] leading-tight">
+          FUEL YOUR DAY <br />
+          <span className="text-[#05c92f] italic font-serif text-6xl lg:text-7xl">The Healthy Way</span>
+        </h1>
+        <p className="text-[#9A978F] text-lg leading-relaxed max-w-2xl mx-auto">
+          Fresh, natural, and nourishing sugar-free breakfast bowls, sandwiches, and superfood chia puddings. Made fresh daily at Vikhroli East Railway Station.
+        </p>
 
-          {/* 4 Value Badges */}
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629]">
-              <FaLeaf className="text-2xl text-[#05c92f] flex-shrink-0" />
-              <div>
-                <h4 className="font-bold text-sm text-[#FAF9F5]">MADE FRESH DAILY</h4>
-                <p className="text-xs text-[#9A978F]">Simmered & prepared every morning</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629]">
-              <FaBolt className="text-2xl text-[#E5C158] flex-shrink-0" />
-              <div>
-                <h4 className="font-bold text-sm text-[#E5C158]">SUGAR FREE</h4>
-                <p className="text-xs text-[#9A978F]">100% natural fiber & energy</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629]">
-              <MdOutlineEnergySavingsLeaf className="text-2xl text-[#05c92f] flex-shrink-0" />
-              <div>
-                <h4 className="font-bold text-sm text-[#FAF9F5]">CLEAN INGREDIENTS</h4>
-                <p className="text-xs text-[#9A978F]">100% wholesome whole grains & fruits</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629]">
-              <FaHeart className="text-2xl text-[#E5C158] flex-shrink-0" />
-              <div>
-                <h4 className="font-bold text-sm text-[#E5C158]">FEEL GOOD INSIDE OUT</h4>
-                <p className="text-xs text-[#9A978F]">Good Food = Good Mood</p>
-              </div>
+        {/* 4 Value Badges */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 w-full max-w-4xl">
+          <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629] text-left">
+            <FaLeaf className="text-2xl text-[#05c92f] flex-shrink-0" />
+            <div>
+              <h4 className="font-bold text-xs text-[#FAF9F5]">MADE FRESH DAILY</h4>
+              <p className="text-[11px] text-[#9A978F]">Prepared every morning</p>
             </div>
           </div>
-
-          <div className="pt-4 flex items-center gap-4">
-            <button
-              onClick={() => handlePreOrder()}
-              className="bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-bold px-8 py-4 rounded-xl text-base shadow-xl transition transform hover:scale-105 flex items-center gap-2.5"
-            >
-              <WhatsAppIcon className="w-6 h-6" color="#0f110f" />
-              <span>Pre-Order via WhatsApp Now</span>
-            </button>
-            <a
-              href="#location"
-              className="border-2 border-[#263629] hover:border-[#E5C158] text-[#FAF9F5] hover:text-[#E5C158] font-bold px-6 py-3.5 rounded-xl transition flex items-center gap-2"
-            >
-              <FaLocationDot className="text-[#05c92f]" />
-              <span>Station Location & Timings</span>
-            </a>
+          <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629] text-left">
+            <FaBolt className="text-2xl text-[#E5C158] flex-shrink-0" />
+            <div>
+              <h4 className="font-bold text-xs text-[#E5C158]">SUGAR FREE</h4>
+              <p className="text-[11px] text-[#9A978F]">Natural fiber & energy</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629] text-left">
+            <MdOutlineEnergySavingsLeaf className="text-2xl text-[#05c92f] flex-shrink-0" />
+            <div>
+              <h4 className="font-bold text-xs text-[#FAF9F5]">CLEAN INGREDIENTS</h4>
+              <p className="text-[11px] text-[#9A978F]">Whole grains & fruits</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629] text-left">
+            <FaHeart className="text-2xl text-[#E5C158] flex-shrink-0" />
+            <div>
+              <h4 className="font-bold text-xs text-[#E5C158]">FEEL GOOD INSIDE</h4>
+              <p className="text-[11px] text-[#9A978F]">Good Food = Good Mood</p>
+            </div>
           </div>
         </div>
 
-        {/* Hero Poster Showcase Gallery */}
-        <div className="col-span-5 relative">
-          <div className="relative rounded-2xl overflow-hidden border-4 border-[#263629] shadow-2xl group bg-[#162118]">
-            <img
-              src={DESKTOP_POSTERS[posterIdx].src}
-              alt={DESKTOP_POSTERS[posterIdx].title}
-              className="w-full h-[480px] object-cover transition transform duration-500 group-hover:scale-105"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "/images/menu_poster.jpeg";
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0f120f] via-transparent to-transparent opacity-80"></div>
-            
-            {/* Gallery Navigation Controls */}
-            <button
-              onClick={() => setPosterIdx((prev) => (prev - 1 + DESKTOP_POSTERS.length) % DESKTOP_POSTERS.length)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-[#E5C158] p-2.5 rounded-full backdrop-blur-sm transition z-10 active:scale-95"
-              title="Previous poster"
-            >
-              <FaChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPosterIdx((prev) => (prev + 1) % DESKTOP_POSTERS.length)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-[#E5C158] p-2.5 rounded-full backdrop-blur-sm transition z-10 active:scale-95"
-              title="Next poster"
-            >
-              <FaChevronRight className="w-4 h-4" />
-            </button>
-
-            {/* Indicator Dots */}
-            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm z-10">
-              {DESKTOP_POSTERS.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setPosterIdx(idx)}
-                  className={`h-2 rounded-full transition-all ${
-                    idx === posterIdx ? "bg-[#E5C158] w-5" : "bg-white/50 w-2"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Poster Info Overlay */}
-            <div className="absolute bottom-3 left-3 right-3 text-center bg-[#162118]/90 backdrop-blur-md p-3 rounded-xl border border-[#263629]">
-              <p className="text-xs font-bold text-[#E5C158] uppercase tracking-wider">{DESKTOP_POSTERS[posterIdx].subtitle}</p>
-              <h3 className="text-base font-extrabold text-[#FAF9F5]">{DESKTOP_POSTERS[posterIdx].title}</h3>
-            </div>
-          </div>
+        <div className="pt-4 flex items-center justify-center gap-4">
+          <button
+            onClick={() => handlePreOrder()}
+            className="bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-bold px-8 py-4 rounded-xl text-base shadow-xl transition transform hover:scale-105 flex items-center gap-2.5"
+          >
+            <WhatsAppIcon className="w-6 h-6" color="#0f110f" />
+            <span>Pre-Order via WhatsApp Now</span>
+          </button>
+          <a
+            href="#location"
+            className="border-2 border-[#263629] hover:border-[#E5C158] text-[#FAF9F5] hover:text-[#E5C158] font-bold px-6 py-3.5 rounded-xl transition flex items-center gap-2"
+          >
+            <FaLocationDot className="text-[#05c92f]" />
+            <span>Station Location & Timings</span>
+          </a>
         </div>
       </section>
 

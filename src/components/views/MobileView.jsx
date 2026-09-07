@@ -29,9 +29,9 @@ export default function MobileView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f120f] text-[#FAF9F5] font-sans pb-28 selection:bg-[#05c92f]/20 overflow-x-hidden">
-      {/* Floating Glass Header Navbar (Clean Dark Theme) */}
-      <header className="sticky top-2 z-40 mx-2 sm:mx-4 bg-[#0f120f]/95 backdrop-blur-xl rounded-2xl border border-[#263629] px-3 sm:px-4 py-2 flex items-center justify-between shadow-2xl transition-all duration-200">
+    <div className="min-h-screen bg-[#0f120f] text-[#FAF9F5] font-sans pb-28 selection:bg-[#05c92f]/20">
+      {/* Floating Glass Header Navbar (Clean Dark Theme - Sticks on Scroll) */}
+      <header className="sticky top-0 z-50 bg-[#0f120f]/95 backdrop-blur-xl border-b border-[#263629] px-3 sm:px-4 py-2.5 flex items-center justify-between shadow-2xl transition-all duration-200">
         {/* Left: Cropped Brand Logo & Single-Line Timing / Address */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Logo className="h-10 sm:h-11 w-auto flex-shrink-0" cropped={true} />
@@ -100,21 +100,6 @@ export default function MobileView() {
           {/* Centered Fitcat Brand Logo */}
           <div className="py-2 flex justify-center w-full">
             <Logo className="h-44 sm:h-52 w-auto" />
-          </div>
-
-          {/* Hero Poster Showcase Image on Mobile */}
-          <div className="w-full relative rounded-2xl overflow-hidden border-2 border-[#263629] shadow-xl my-2 group">
-            <img
-              src="/images/hero_poster.jpeg"
-              alt="Fitcat Healthy Breakfast Menu Poster"
-              className="w-full h-56 sm:h-64 object-cover"
-              onError={(e) => { e.target.src = "/images/menu_poster.jpeg"; }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0f120f] via-transparent to-transparent opacity-80"></div>
-            <div className="absolute bottom-3 left-3 right-3 text-center bg-[#162118]/90 backdrop-blur-md p-2.5 rounded-xl border border-[#263629]">
-              <p className="text-[10px] font-bold text-[#E5C158] uppercase tracking-wider">Fitcat Daily Menu Special</p>
-              <h3 className="text-sm font-black text-[#FAF9F5]">Good Food • Good Mood</h3>
-            </div>
           </div>
 
           {/* Headline & Subhead */}
