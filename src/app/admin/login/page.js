@@ -43,8 +43,14 @@ export default function AdminLoginPage() {
         setError(`⛔ Access Denied: (${user.email}) is not an authorized admin.`);
       }
     } catch (err) {
-      console.error("Google Sign-In Error:", err);
-      setError("Sign-in failed. Please try again.");
+      console.error("Google Sign-In Error details:", err);
+      if (err.code === "auth/unauthorized-domain") {
+        setError("Domain not authorized in Firebase. Add your domain in Firebase Console ➔ Authentication ➔ Settings ➔ Authorized domains.");
+      } else if (err.code === "auth/popup-closed-by-user") {
+        setError("Sign-in popup was closed. Please try again.");
+      } else {
+        setError(err.message || "Sign-in failed. Please check browser permissions and domain settings.");
+      }
     } finally {
       setLoading(false);
     }
@@ -60,7 +66,7 @@ export default function AdminLoginPage() {
         </div>
 
         {error && (
-          <div className="bg-red-600/90 text-white text-xs font-bold p-3 rounded-xl border border-red-400 text-center animate-shake">
+          <div className="bg-red-600/90 text-white text-xs font-bold p-3 rounded-xl border border-red-400 text-center animate-shake leading-relaxed">
             {error}
           </div>
         )}
