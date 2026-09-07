@@ -1,64 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Logo from "../Logo";
 import MapSection from "../MapSection";
 import PreOrderModal from "../PreOrderModal";
+import FoodCard from "../FoodCard";
+import WhatsAppIcon from "../WhatsAppIcon";
+import InstagramIcon from "../InstagramIcon";
+import { subscribeToMenuItems } from "@/lib/menu";
+import { FaLocationDot, FaLeaf, FaBolt, FaHeart, FaUserTie } from "react-icons/fa6";
+import { MdOutlineEnergySavingsLeaf } from "react-icons/md";
 
-const MENU_ITEMS = [
-  {
-    id: "pb-sandwich",
-    name: "Peanut Butter Banana Sandwich",
-    price: 50,
-    badge: "Protein Rich & Fiber-full",
-    description: "Creamy peanut butter and fresh, sweet banana slices layered for a classic, protein-packed energy boost.",
-    image: "/images/menu_poster.jpeg",
-  },
-  {
-    id: "chia-pudding",
-    name: "Superfood Chia Pudding",
-    price: 55,
-    badge: "Energy Boost",
-    description: "A velvety, nutrient-rich delight with a perfectly creamy texture and a hint of natural sweetness.",
-    image: "/images/hero_poster.jpeg",
-  },
-  {
-    id: "rice-cakes",
-    name: "Crispy Rice Cakes",
-    price: 50,
-    badge: "Light & Airy Crunch",
-    description: "Light, airy, and crisp—the perfect satisfying crunch to keep you fueled and focused.",
-    image: "/images/menu_poster.jpeg",
-  },
-  {
-    id: "oats",
-    name: "Whole Grain Oats",
-    price: 65,
-    badge: "Hearty Fiber",
-    description: "A warm, comforting bowl of whole-grain oats, rich in fiber and simmered to a perfect, hearty texture.",
-    image: "/images/hero_poster.jpeg",
-  },
-  {
-    id: "muesli",
-    name: "Toasted Nut Muesli",
-    price: 70,
-    badge: "Wholesome Crunch",
-    description: "A wholesome, satisfying crunch of toasted oats, premium nuts, and vibrant dried fruits.",
-    image: "/images/menu_poster.jpeg",
-  },
-  {
-    id: "fruit-bowl",
-    name: "Fresh Fruit Bowl",
-    price: 50,
-    badge: "100% Natural Sweetness",
-    description: "A vibrant, refreshing medley of freshly chopped fruits bursting with natural sweetness.",
-    image: "/images/hero_poster.jpeg",
-  },
-];
-
-export default function DesktopView({ onToggleView, currentViewMode }) {
+export default function DesktopView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToMenuItems((liveItems) => {
+      setMenuItems(liveItems);
+    });
+    return () => unsubscribe && unsubscribe();
+  }, []);
 
   const handlePreOrder = (item = null) => {
     setSelectedItem(item);
@@ -72,25 +35,37 @@ export default function DesktopView({ onToggleView, currentViewMode }) {
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 bg-fitcat-gold/20 px-2.5 py-0.5 rounded-full text-fitcat-cream">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            Store Timings: 6:30 AM – 9:30 AM Daily
+            Store Timings: 6:30 AM to 9:30 AM Daily
           </span>
-          <span>📍 Vikhroli East Railway Station, Mumbai</span>
+          <span className="flex items-center gap-1.5"><FaLocationDot className="text-fitcat-gold" /> Vikhroli East Railway Station, Mumbai</span>
         </div>
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => onToggleView(currentViewMode === "desktop" ? "mobile" : "desktop")}
-            className="bg-fitcat-gold/20 hover:bg-fitcat-gold/40 text-fitcat-gold px-3 py-1 rounded text-xs transition"
+          <a
+            href="https://wa.me/917977034609"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 text-[#25D366] hover:underline font-bold"
           >
-            🖥️ Desktop View Mode (Click to Switch to Mobile File View)
-          </button>
-          <a href="/admin" className="hover:underline text-fitcat-cream">🔒 Admin Dashboard</a>
+            <WhatsAppIcon className="w-4 h-4" color="#25D366" />
+            <span>+91 7977034609</span>
+          </a>
+          <span className="text-fitcat-gold/40">•</span>
+          <a
+            href="https://instagram.com/fitcatmumbai"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 text-[#E1306C] hover:underline font-bold"
+          >
+            <InstagramIcon className="w-4 h-4" color="#E1306C" />
+            <span>@fitcatmumbai</span>
+          </a>
         </div>
       </div>
 
       {/* Desktop Header Navigation */}
-      <header className="sticky top-0 z-40 bg-fitcat-green/95 backdrop-blur-md border-b border-fitcat-gold/30 px-8 py-4 flex items-center justify-between shadow-lg">
+      <header className="sticky top-0 z-40 bg-fitcat-green/95 backdrop-blur-md border-b border-fitcat-gold/30 px-8 py-3 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
-          <Logo className="h-14 w-auto" />
+          <Logo className="h-20 lg:h-24 w-auto" />
         </div>
 
         <nav className="flex items-center gap-8 text-sm font-bold tracking-wide">
@@ -104,9 +79,10 @@ export default function DesktopView({ onToggleView, currentViewMode }) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => handlePreOrder()}
-            className="bg-fitcat-gold hover:bg-yellow-500 text-fitcat-darkgreen font-black px-6 py-2.5 rounded-xl shadow-lg transition transform hover:scale-105 flex items-center gap-2 text-sm"
+            className="bg-green-600 hover:bg-green-500 text-white font-black px-6 py-2.5 rounded-xl shadow-lg transition transform hover:scale-105 flex items-center gap-2 text-sm"
           >
-            <span>💬</span> Pre-Book Tomorrow's Meal
+            <WhatsAppIcon className="w-5 h-5 fill-white" />
+            <span>Pre-Book Tomorrow's Meal</span>
           </button>
         </div>
       </header>
@@ -128,28 +104,28 @@ export default function DesktopView({ onToggleView, currentViewMode }) {
           {/* 4 Value Badges */}
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="flex items-center gap-3 bg-fitcat-darkgreen/60 p-3 rounded-xl border border-fitcat-gold/20">
-              <span className="text-2xl">🌱</span>
+              <FaLeaf className="text-2xl text-fitcat-gold flex-shrink-0" />
               <div>
                 <h4 className="font-bold text-sm text-fitcat-gold">MADE FRESH DAILY</h4>
                 <p className="text-xs text-fitcat-cream/70">Simmered & prepared every morning</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-fitcat-darkgreen/60 p-3 rounded-xl border border-fitcat-gold/20">
-              <span className="text-2xl">⚡</span>
+              <FaBolt className="text-2xl text-fitcat-gold flex-shrink-0" />
               <div>
-                <h4 className="font-bold text-sm text-fitcat-gold">RICH IN NUTRIENTS</h4>
-                <p className="text-xs text-fitcat-cream/70">High protein & fiber for morning energy</p>
+                <h4 className="font-bold text-sm text-fitcat-gold">SUGAR FREE</h4>
+                <p className="text-xs text-fitcat-cream/70">100% natural fiber & energy</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-fitcat-darkgreen/60 p-3 rounded-xl border border-fitcat-gold/20">
-              <span className="text-2xl">🥗</span>
+              <MdOutlineEnergySavingsLeaf className="text-2xl text-fitcat-gold flex-shrink-0" />
               <div>
                 <h4 className="font-bold text-sm text-fitcat-gold">CLEAN INGREDIENTS</h4>
                 <p className="text-xs text-fitcat-cream/70">100% wholesome whole grains & fruits</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-fitcat-darkgreen/60 p-3 rounded-xl border border-fitcat-gold/20">
-              <span className="text-2xl">💚</span>
+              <FaHeart className="text-2xl text-fitcat-gold flex-shrink-0" />
               <div>
                 <h4 className="font-bold text-sm text-fitcat-gold">FEEL GOOD INSIDE OUT</h4>
                 <p className="text-xs text-fitcat-cream/70">Good Food = Good Mood</p>
@@ -160,20 +136,22 @@ export default function DesktopView({ onToggleView, currentViewMode }) {
           <div className="pt-4 flex items-center gap-4">
             <button
               onClick={() => handlePreOrder()}
-              className="bg-fitcat-gold hover:bg-yellow-500 text-fitcat-darkgreen font-black px-8 py-4 rounded-xl text-base shadow-xl transition transform hover:scale-105 flex items-center gap-2"
+              className="bg-green-600 hover:bg-green-500 text-white font-black px-8 py-4 rounded-xl text-base shadow-xl transition transform hover:scale-105 flex items-center gap-2.5"
             >
-              <span>📲</span> Pre-Order via WhatsApp Now
+              <WhatsAppIcon className="w-6 h-6" color="#ffffff" />
+              <span>Pre-Order via WhatsApp Now</span>
             </button>
             <a
               href="#location"
-              className="border-2 border-fitcat-cream/40 hover:border-fitcat-gold text-fitcat-cream hover:text-fitcat-gold font-bold px-6 py-3.5 rounded-xl transition"
+              className="border-2 border-fitcat-cream/40 hover:border-fitcat-gold text-fitcat-cream hover:text-fitcat-gold font-bold px-6 py-3.5 rounded-xl transition flex items-center gap-2"
             >
-              📍 Station Location & Timings
+              <FaLocationDot className="text-fitcat-gold" />
+              <span>Station Location & Timings</span>
             </a>
           </div>
         </div>
 
-        {/* Hero Poster Image Showcase */}
+        {/* Hero Poster Showcase */}
         <div className="col-span-5 relative">
           <div className="relative rounded-2xl overflow-hidden border-4 border-fitcat-gold shadow-2xl group">
             <img
@@ -190,7 +168,7 @@ export default function DesktopView({ onToggleView, currentViewMode }) {
         </div>
       </section>
 
-      {/* Desktop Menu Grid Section */}
+      {/* Desktop Menu Section */}
       <section id="menu" className="px-8 py-16 bg-fitcat-darkgreen/80 border-t border-b border-fitcat-gold/20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-12">
@@ -200,38 +178,21 @@ export default function DesktopView({ onToggleView, currentViewMode }) {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-8">
-            {MENU_ITEMS.map((item) => (
-              <div
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {menuItems.map((item, index) => (
+              <FoodCard
                 key={item.id}
-                className="bg-fitcat-green rounded-2xl border-2 border-fitcat-gold/30 hover:border-fitcat-gold shadow-xl p-6 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="bg-fitcat-gold/20 text-fitcat-gold text-xs font-extrabold px-3 py-1 rounded-full border border-fitcat-gold/40">
-                      {item.badge}
-                    </span>
-                    <span className="text-2xl font-black text-fitcat-gold bg-fitcat-darkgreen px-3 py-1 rounded-lg border border-fitcat-gold/30">
-                      ₹{item.price}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-fitcat-cream mb-2">{item.name}</h3>
-                  <p className="text-xs text-fitcat-cream/80 leading-relaxed mb-4">{item.description}</p>
-                </div>
-
-                <button
-                  onClick={() => handlePreOrder(item)}
-                  className="w-full mt-4 bg-fitcat-gold/20 hover:bg-fitcat-gold text-fitcat-gold hover:text-fitcat-darkgreen font-black py-2.5 px-4 rounded-xl border border-fitcat-gold transition flex items-center justify-center gap-2 text-sm"
-                >
-                  <span>📲</span> Pre-Book for ₹{item.price}
-                </button>
-              </div>
+                item={item}
+                index={index}
+                onPreOrder={handlePreOrder}
+                variant="desktop"
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Desktop Map & Location Section with Logo Overlay */}
+      {/* Desktop Map & Location Section */}
       <section id="location" className="px-8 py-16 max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <h2 className="text-3xl font-black text-fitcat-gold tracking-wider uppercase">FIND US AT VIKHROLI EAST</h2>
@@ -259,12 +220,15 @@ export default function DesktopView({ onToggleView, currentViewMode }) {
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2 text-xs">
               <div className="bg-fitcat-green p-3 rounded-lg border border-fitcat-gold/30">
-                <span className="font-bold text-fitcat-gold block">👨‍🍳 Founder</span>
+                <span className="font-bold text-fitcat-gold flex items-center gap-1.5 mb-0.5"><FaUserTie className="text-fitcat-gold" /> Founder</span>
                 <span>Harsh Karangutkar</span>
               </div>
               <div className="bg-fitcat-green p-3 rounded-lg border border-fitcat-gold/30">
                 <span className="font-bold text-fitcat-gold block">📱 Instagram</span>
-                <a href="https://instagram.com/fitcatmumbai" target="_blank" rel="noreferrer" className="hover:underline">@fitcatmumbai</a>
+                <a href="https://instagram.com/fitcatmumbai" target="_blank" rel="noreferrer" className="hover:underline flex items-center gap-1.5 mt-0.5 font-bold text-[#E1306C]">
+                  <InstagramIcon className="w-3.5 h-3.5" color="#E1306C" />
+                  <span>@fitcatmumbai</span>
+                </a>
               </div>
             </div>
           </div>
@@ -274,11 +238,15 @@ export default function DesktopView({ onToggleView, currentViewMode }) {
       {/* Desktop Footer */}
       <footer className="bg-fitcat-darkgreen border-t border-fitcat-gold/30 py-8 px-8 text-center text-xs text-fitcat-cream/70">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <Logo className="h-10 w-auto" />
+          <Logo className="h-16 w-auto" />
           <p>© {new Date().getFullYear()} Fitcat (fitcat.in). All rights reserved. Vikhroli East, Mumbai.</p>
-          <div className="flex gap-4">
-            <a href="/admin" className="hover:text-fitcat-gold">Admin Panel</a>
-            <a href="https://instagram.com/fitcatmumbai" target="_blank" rel="noreferrer" className="hover:text-fitcat-gold">Instagram</a>
+          <div className="flex gap-6 items-center">
+            <a href="https://wa.me/917977034609" target="_blank" rel="noreferrer" className="hover:text-green-300 text-[#25D366] flex items-center gap-1.5 font-bold">
+              <WhatsAppIcon className="w-4 h-4" color="#25D366" /> WhatsApp
+            </a>
+            <a href="https://instagram.com/fitcatmumbai" target="_blank" rel="noreferrer" className="hover:text-pink-300 text-[#E1306C] flex items-center gap-1.5 font-bold">
+              <InstagramIcon className="w-4 h-4" color="#E1306C" /> Instagram
+            </a>
           </div>
         </div>
       </footer>

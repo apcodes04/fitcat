@@ -1,9 +1,11 @@
 "use client";
 
-export default function Logo({ className = "h-12 w-auto", showTagline = true, color = "#F7F3E9" }) {
+export default function Logo({ className = "h-12 w-auto", showTagline = true, color = "#F7F3E9", cropped = false }) {
+  const viewBox = cropped ? "60 15 180 200" : "0 0 300 240";
+
   return (
-    <div className={`inline-flex items-center gap-3 ${className}`}>
-      <svg viewBox="0 0 300 240" className="h-full w-auto" fill="none" style={{ color: color }}>
+    <div className={`inline-flex items-center gap-2 ${className}`}>
+      <svg viewBox={viewBox} className="h-full w-auto" fill="none" style={{ color: color }}>
         {/* Cat Face Stencil */}
         <g transform="translate(150, 70)" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none">
           <path d="M -45 -25 L -35 -55 L -12 -35 C -4 -38 4 -38 12 -35 L 35 -55 L 45 -25 C 55 -10 58 10 52 28 C 45 45 25 55 0 55 C -25 55 -45 45 -52 28 C -58 10 -55 -10 -45 -25 Z" />

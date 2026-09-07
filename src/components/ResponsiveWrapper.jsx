@@ -5,10 +5,11 @@ import DesktopView from "./views/DesktopView";
 import MobileView from "./views/MobileView";
 
 export default function ResponsiveWrapper() {
-  const [viewMode, setViewMode] = useState("auto"); // "auto", "desktop", "mobile"
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handleResize = () => {
       setIsMobileDevice(window.innerWidth < 768);
     };
@@ -17,15 +18,7 @@ export default function ResponsiveWrapper() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const effectiveMode = viewMode === "auto" ? (isMobileDevice ? "mobile" : "desktop") : viewMode;
+  if (!mounted) return null;
 
-  return (
-    <>
-      {effectiveMode === "mobile" ? (
-        <MobileView onToggleView={(mode) => setViewMode(mode)} currentViewMode={effectiveMode} />
-      ) : (
-        <DesktopView onToggleView={(mode) => setViewMode(mode)} currentViewMode={effectiveMode} />
-      )}
-    </>
-  );
+  return isMobileDevice ? <MobileView /> : <DesktopView />;
 }

@@ -57,16 +57,16 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-fitcat-green text-fitcat-cream font-sans flex items-center justify-center p-4">
-      <div className="bg-fitcat-darkgreen border-2 border-fitcat-gold rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6">
+    <div className="min-h-screen bg-[#0f120f] text-[#FAF9F5] font-sans flex items-center justify-center p-4">
+      <div className="bg-[#162118] border border-[#263629] rounded-[.85rem] p-8 max-w-md w-full shadow-2xl space-y-6">
         <div className="text-center space-y-2">
           <Logo className="h-16 w-auto mx-auto" />
-          <h1 className="text-2xl font-black text-fitcat-gold">Admin Portal</h1>
-          <p className="text-xs text-fitcat-cream/80">Sign in with authorized Google OAuth account</p>
+          <h1 className="text-2xl font-extrabold text-[#E5C158]">Admin Portal</h1>
+          <p className="text-xs text-[#9A978F]">Sign in with authorized Google OAuth account</p>
         </div>
 
         {error && (
-          <div className="bg-red-600/90 text-white text-xs font-bold p-3 rounded-xl border border-red-400 text-center animate-shake leading-relaxed">
+          <div className="bg-red-600/90 text-white text-xs font-bold p-3 rounded-xl border border-red-400 text-center leading-relaxed">
             {error}
           </div>
         )}
@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full bg-white hover:bg-slate-100 text-slate-900 font-bold py-3.5 px-4 rounded-xl border border-slate-300 shadow flex items-center justify-center gap-3 transition transform hover:scale-[1.02] disabled:opacity-50"
+            className="w-full bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-bold py-3.5 px-4 rounded-full shadow flex items-center justify-center gap-3 transition transform hover:scale-[1.02] disabled:opacity-50 text-xs"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -87,13 +87,13 @@ export default function AdminLoginPage() {
             <span>{loading ? "Signing in..." : "Sign in with Google OAuth"}</span>
           </button>
 
-          <p className="text-[11px] text-fitcat-cream/60 text-center leading-relaxed">
+          <p className="text-[11px] text-[#9A978F] text-center leading-relaxed">
             Restricted access. Only authorized admin Google accounts can enter the Fitcat dashboard.
           </p>
         </div>
 
         <div className="pt-2 text-center">
-          <a href="/" className="text-xs text-fitcat-gold hover:underline font-semibold">
+          <a href="/" className="text-xs text-[#E5C158] hover:underline font-bold">
             ← Back to Main Website
           </a>
         </div>
