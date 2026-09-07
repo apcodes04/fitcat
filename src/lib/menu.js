@@ -73,17 +73,13 @@ export function subscribeToMenuItems(callback) {
         // Seed default items if collection is empty
         await seedDefaultMenu();
       } else {
-        const defaultPosters = ["/images/menu_poster.jpeg", "/images/hero_poster.jpeg", "/images/business_card.jpeg"];
-        const items = snapshot.docs.map((doc, idx) => {
+        const items = snapshot.docs.map((doc) => {
           const data = doc.data();
-          const fallback = defaultPosters[idx % defaultPosters.length];
-          const hasValidImage = data.image && typeof data.image === "string" && data.image.trim() !== "";
-          const hasValidImages = Array.isArray(data.images) && data.images.length > 0;
           return {
             id: doc.id,
             ...data,
-            image: hasValidImage ? data.image.trim() : fallback,
-            images: hasValidImages ? data.images : [hasValidImage ? data.image.trim() : fallback],
+            image: typeof data.image === "string" ? data.image : "",
+            images: Array.isArray(data.images) ? data.images : (data.image ? [data.image] : []),
           };
         });
         callback(items);

@@ -473,7 +473,16 @@ export default function AdminDashboardPage() {
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setEditingItem(item)}
+                        onClick={() => {
+                          const images = Array.isArray(item.images) && item.images.length > 0
+                            ? item.images
+                            : (item.image && item.image.trim() !== "" ? [item.image.trim()] : []);
+                          setEditingItem({
+                            ...item,
+                            image: item.image || "",
+                            images: images,
+                          });
+                        }}
                         className="flex-1 bg-[#0a140c] hover:bg-[#263629] text-[#FAF9F5] hover:text-[#E5C158] font-bold py-2 rounded-full border border-[#263629] text-xs transition flex items-center justify-center gap-1.5"
                       >
                         <FaPenToSquare className="text-xs text-[#E5C158]" />

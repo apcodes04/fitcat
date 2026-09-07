@@ -7,7 +7,7 @@ import { FaArrowRight, FaBan, FaChevronLeft, FaChevronRight } from "react-icons/
 export default function FoodCard({ item, index, onPreOrder, variant = "mobile" }) {
   const imageList = Array.isArray(item.images) && item.images.length > 0
     ? item.images
-    : (item.image && item.image.trim() !== "" ? [item.image.trim()] : ["/images/menu_poster.jpeg"]);
+    : (item.image && item.image.trim() !== "" ? [item.image.trim()] : []);
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [isPortrait, setIsPortrait] = useState(false);
