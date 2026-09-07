@@ -8,13 +8,32 @@ import FoodCard from "../FoodCard";
 import WhatsAppIcon from "../WhatsAppIcon";
 import InstagramIcon from "../InstagramIcon";
 import { subscribeToMenuItems } from "@/lib/menu";
-import { FaLocationDot, FaLeaf, FaBolt, FaHeart, FaUserTie } from "react-icons/fa6";
+import { FaLocationDot, FaLeaf, FaBolt, FaHeart, FaUserTie, FaPhone, FaCalendarDays, FaClock, FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { MdOutlineEnergySavingsLeaf } from "react-icons/md";
+
+const DESKTOP_POSTERS = [
+  {
+    src: "/images/hero_poster.jpeg",
+    title: "Good Food • Good Mood",
+    subtitle: "Fitcat Daily Special Poster",
+  },
+  {
+    src: "/images/menu_poster.jpeg",
+    title: "Healthy Sugar-Free Menu",
+    subtitle: "Official Outlet Menu",
+  },
+  {
+    src: "/images/business_card.jpeg",
+    title: "Vikhroli East Station Outlet",
+    subtitle: "Store Location & Contact Card",
+  },
+];
 
 export default function DesktopView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
+  const [posterIdx, setPosterIdx] = useState(0);
 
   useEffect(() => {
     const unsubscribe = subscribeToMenuItems((liveItems) => {
@@ -29,15 +48,15 @@ export default function DesktopView() {
   };
 
   return (
-    <div className="min-h-screen bg-fitcat-green text-fitcat-cream font-sans">
+    <div className="min-h-screen bg-[#0f120f] text-[#FAF9F5] font-sans selection:bg-[#05c92f]/20">
       {/* Desktop Top Announcement Bar */}
-      <div className="bg-fitcat-darkgreen text-fitcat-gold px-6 py-2 text-xs font-semibold flex items-center justify-between border-b border-fitcat-gold/20">
+      <div className="bg-[#162118] text-[#E5C158] px-6 py-2 text-xs font-semibold flex items-center justify-between border-b border-[#263629]">
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 bg-fitcat-gold/20 px-2.5 py-0.5 rounded-full text-fitcat-cream">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+          <span className="flex items-center gap-1.5 bg-[#0a140c] px-2.5 py-0.5 rounded-full text-[#FAF9F5] border border-[#263629]">
+            <span className="w-2 h-2 rounded-full bg-[#05c92f] animate-pulse"></span>
             Store Timings: 6:30 AM to 9:30 AM Daily
           </span>
-          <span className="flex items-center gap-1.5"><FaLocationDot className="text-fitcat-gold" /> Vikhroli East Railway Station, Mumbai</span>
+          <span className="flex items-center gap-1.5"><FaLocationDot className="text-[#05c92f]" /> Vikhroli East Railway Station, Mumbai</span>
         </div>
         <div className="flex items-center gap-4">
           <a
@@ -49,7 +68,7 @@ export default function DesktopView() {
             <WhatsAppIcon className="w-4 h-4" color="#25D366" />
             <span>+91 7977034609</span>
           </a>
-          <span className="text-fitcat-gold/40">•</span>
+          <span className="text-[#263629]">•</span>
           <a
             href="https://instagram.com/fitcatmumbai"
             target="_blank"
@@ -63,25 +82,25 @@ export default function DesktopView() {
       </div>
 
       {/* Desktop Header Navigation */}
-      <header className="sticky top-0 z-40 bg-fitcat-green/95 backdrop-blur-md border-b border-fitcat-gold/30 px-8 py-3 flex items-center justify-between shadow-lg">
+      <header className="sticky top-0 z-40 bg-[#0f120f]/95 backdrop-blur-md border-b border-[#263629] px-8 py-3 flex items-center justify-between shadow-lg text-[#FAF9F5]">
         <div className="flex items-center gap-3">
           <Logo className="h-20 lg:h-24 w-auto" />
         </div>
 
         <nav className="flex items-center gap-8 text-sm font-bold tracking-wide">
-          <a href="#hero" className="hover:text-fitcat-gold transition">Home</a>
-          <a href="#menu" className="hover:text-fitcat-gold transition">Menu & Prices</a>
-          <a href="#preorder" className="hover:text-fitcat-gold transition">WhatsApp Pre-Order</a>
-          <a href="#about" className="hover:text-fitcat-gold transition">About Us</a>
-          <a href="#location" className="hover:text-fitcat-gold transition">Store Map</a>
+          <a href="#hero" className="hover:text-[#E5C158] transition">Home</a>
+          <a href="#menu" className="hover:text-[#E5C158] transition">Menu & Prices</a>
+          <a href="#preorder" className="hover:text-[#E5C158] transition">WhatsApp Pre-Order</a>
+          <a href="#about" className="hover:text-[#E5C158] transition">About Us</a>
+          <a href="#location" className="hover:text-[#E5C158] transition">Store Map</a>
         </nav>
 
         <div className="flex items-center gap-3">
           <button
             onClick={() => handlePreOrder()}
-            className="bg-green-600 hover:bg-green-500 text-white font-black px-6 py-2.5 rounded-xl shadow-lg transition transform hover:scale-105 flex items-center gap-2 text-sm"
+            className="bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-bold px-6 py-2.5 rounded-xl shadow-lg transition transform hover:scale-105 flex items-center gap-2 text-sm"
           >
-            <WhatsAppIcon className="w-5 h-5 fill-white" />
+            <WhatsAppIcon className="w-5 h-5" color="#0f110f" />
             <span>Pre-Book Tomorrow's Meal</span>
           </button>
         </div>
@@ -90,45 +109,45 @@ export default function DesktopView() {
       {/* Desktop Hero Section */}
       <section id="hero" className="relative px-8 py-16 max-w-7xl mx-auto grid grid-cols-12 gap-8 items-center">
         <div className="col-span-7 space-y-6">
-          <div className="inline-block bg-fitcat-gold/20 border border-fitcat-gold text-fitcat-gold px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
+          <div className="inline-block bg-[#0e2413] border border-[#1b4224] text-[#05c92f] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
             Eat Clean. Feel Great.
           </div>
-          <h1 className="text-5xl font-black text-fitcat-cream leading-tight">
+          <h1 className="text-5xl font-extrabold text-[#FAF9F5] leading-tight">
             FUEL YOUR DAY <br />
-            <span className="text-fitcat-gold italic font-serif text-6xl">The Healthy Way</span>
+            <span className="text-[#05c92f] italic font-serif text-6xl">The Healthy Way</span>
           </h1>
-          <p className="text-fitcat-cream/90 text-lg leading-relaxed max-w-xl">
-            Fresh, natural, and nourishing power breakfast bowls, sandwiches, and superfood chia puddings. Made fresh daily at Vikhroli East Railway Station.
+          <p className="text-[#9A978F] text-lg leading-relaxed max-w-xl">
+            Fresh, natural, and nourishing sugar-free breakfast bowls, sandwiches, and superfood chia puddings. Made fresh daily at Vikhroli East Railway Station.
           </p>
 
           {/* 4 Value Badges */}
           <div className="grid grid-cols-2 gap-4 pt-2">
-            <div className="flex items-center gap-3 bg-fitcat-darkgreen/60 p-3 rounded-xl border border-fitcat-gold/20">
-              <FaLeaf className="text-2xl text-fitcat-gold flex-shrink-0" />
+            <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629]">
+              <FaLeaf className="text-2xl text-[#05c92f] flex-shrink-0" />
               <div>
-                <h4 className="font-bold text-sm text-fitcat-gold">MADE FRESH DAILY</h4>
-                <p className="text-xs text-fitcat-cream/70">Simmered & prepared every morning</p>
+                <h4 className="font-bold text-sm text-[#FAF9F5]">MADE FRESH DAILY</h4>
+                <p className="text-xs text-[#9A978F]">Simmered & prepared every morning</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-fitcat-darkgreen/60 p-3 rounded-xl border border-fitcat-gold/20">
-              <FaBolt className="text-2xl text-fitcat-gold flex-shrink-0" />
+            <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629]">
+              <FaBolt className="text-2xl text-[#E5C158] flex-shrink-0" />
               <div>
-                <h4 className="font-bold text-sm text-fitcat-gold">SUGAR FREE</h4>
-                <p className="text-xs text-fitcat-cream/70">100% natural fiber & energy</p>
+                <h4 className="font-bold text-sm text-[#E5C158]">SUGAR FREE</h4>
+                <p className="text-xs text-[#9A978F]">100% natural fiber & energy</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-fitcat-darkgreen/60 p-3 rounded-xl border border-fitcat-gold/20">
-              <MdOutlineEnergySavingsLeaf className="text-2xl text-fitcat-gold flex-shrink-0" />
+            <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629]">
+              <MdOutlineEnergySavingsLeaf className="text-2xl text-[#05c92f] flex-shrink-0" />
               <div>
-                <h4 className="font-bold text-sm text-fitcat-gold">CLEAN INGREDIENTS</h4>
-                <p className="text-xs text-fitcat-cream/70">100% wholesome whole grains & fruits</p>
+                <h4 className="font-bold text-sm text-[#FAF9F5]">CLEAN INGREDIENTS</h4>
+                <p className="text-xs text-[#9A978F]">100% wholesome whole grains & fruits</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-fitcat-darkgreen/60 p-3 rounded-xl border border-fitcat-gold/20">
-              <FaHeart className="text-2xl text-fitcat-gold flex-shrink-0" />
+            <div className="flex items-center gap-3 bg-[#162118] p-4 rounded-xl border border-[#263629]">
+              <FaHeart className="text-2xl text-[#E5C158] flex-shrink-0" />
               <div>
-                <h4 className="font-bold text-sm text-fitcat-gold">FEEL GOOD INSIDE OUT</h4>
-                <p className="text-xs text-fitcat-cream/70">Good Food = Good Mood</p>
+                <h4 className="font-bold text-sm text-[#E5C158]">FEEL GOOD INSIDE OUT</h4>
+                <p className="text-xs text-[#9A978F]">Good Food = Good Mood</p>
               </div>
             </div>
           </div>
@@ -136,44 +155,79 @@ export default function DesktopView() {
           <div className="pt-4 flex items-center gap-4">
             <button
               onClick={() => handlePreOrder()}
-              className="bg-green-600 hover:bg-green-500 text-white font-black px-8 py-4 rounded-xl text-base shadow-xl transition transform hover:scale-105 flex items-center gap-2.5"
+              className="bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-bold px-8 py-4 rounded-xl text-base shadow-xl transition transform hover:scale-105 flex items-center gap-2.5"
             >
-              <WhatsAppIcon className="w-6 h-6" color="#ffffff" />
+              <WhatsAppIcon className="w-6 h-6" color="#0f110f" />
               <span>Pre-Order via WhatsApp Now</span>
             </button>
             <a
               href="#location"
-              className="border-2 border-fitcat-cream/40 hover:border-fitcat-gold text-fitcat-cream hover:text-fitcat-gold font-bold px-6 py-3.5 rounded-xl transition flex items-center gap-2"
+              className="border-2 border-[#263629] hover:border-[#E5C158] text-[#FAF9F5] hover:text-[#E5C158] font-bold px-6 py-3.5 rounded-xl transition flex items-center gap-2"
             >
-              <FaLocationDot className="text-fitcat-gold" />
+              <FaLocationDot className="text-[#05c92f]" />
               <span>Station Location & Timings</span>
             </a>
           </div>
         </div>
 
-        {/* Hero Poster Showcase */}
+        {/* Hero Poster Showcase Gallery */}
         <div className="col-span-5 relative">
-          <div className="relative rounded-2xl overflow-hidden border-4 border-fitcat-gold shadow-2xl group">
+          <div className="relative rounded-2xl overflow-hidden border-4 border-[#263629] shadow-2xl group bg-[#162118]">
             <img
-              src="/images/hero_poster.jpeg"
-              alt="Fitcat Healthy Breakfast Menu Poster"
+              src={DESKTOP_POSTERS[posterIdx].src}
+              alt={DESKTOP_POSTERS[posterIdx].title}
               className="w-full h-[480px] object-cover transition transform duration-500 group-hover:scale-105"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "/images/menu_poster.jpeg";
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-fitcat-darkgreen via-transparent to-transparent opacity-80"></div>
-            <div className="absolute bottom-4 left-4 right-4 text-center bg-fitcat-green/90 backdrop-blur-md p-3 rounded-xl border border-fitcat-gold/40">
-              <p className="text-xs font-bold text-fitcat-gold uppercase tracking-wider">Fitcat Daily Special</p>
-              <h3 className="text-lg font-black text-fitcat-cream">Good Food • Good Mood</h3>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0f120f] via-transparent to-transparent opacity-80"></div>
+            
+            {/* Gallery Navigation Controls */}
+            <button
+              onClick={() => setPosterIdx((prev) => (prev - 1 + DESKTOP_POSTERS.length) % DESKTOP_POSTERS.length)}
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-[#E5C158] p-2.5 rounded-full backdrop-blur-sm transition z-10 active:scale-95"
+              title="Previous poster"
+            >
+              <FaChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setPosterIdx((prev) => (prev + 1) % DESKTOP_POSTERS.length)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-[#E5C158] p-2.5 rounded-full backdrop-blur-sm transition z-10 active:scale-95"
+              title="Next poster"
+            >
+              <FaChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Indicator Dots */}
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm z-10">
+              {DESKTOP_POSTERS.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setPosterIdx(idx)}
+                  className={`h-2 rounded-full transition-all ${
+                    idx === posterIdx ? "bg-[#E5C158] w-5" : "bg-white/50 w-2"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Poster Info Overlay */}
+            <div className="absolute bottom-3 left-3 right-3 text-center bg-[#162118]/90 backdrop-blur-md p-3 rounded-xl border border-[#263629]">
+              <p className="text-xs font-bold text-[#E5C158] uppercase tracking-wider">{DESKTOP_POSTERS[posterIdx].subtitle}</p>
+              <h3 className="text-base font-extrabold text-[#FAF9F5]">{DESKTOP_POSTERS[posterIdx].title}</h3>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Desktop Menu Section */}
-      <section id="menu" className="px-8 py-16 bg-fitcat-darkgreen/80 border-t border-b border-fitcat-gold/20">
+      {/* Desktop Menu Grid Section */}
+      <section id="menu" className="px-8 py-16 bg-[#0a140c] border-t border-b border-[#263629]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-3xl font-black text-fitcat-gold tracking-wider uppercase">FITCAT MENU</h2>
-            <p className="text-fitcat-cream/80 text-sm mt-2">
+            <h2 className="text-3xl font-bold text-[#E5C158] tracking-wider uppercase">FITCAT MENU</h2>
+            <p className="text-[#9A978F] text-sm mt-2">
               Freshly prepared healthy breakfasts served daily from 6:30 AM to 9:30 AM at Vikhroli East Station.
             </p>
           </div>
@@ -195,8 +249,8 @@ export default function DesktopView() {
       {/* Desktop Map & Location Section */}
       <section id="location" className="px-8 py-16 max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <h2 className="text-3xl font-black text-fitcat-gold tracking-wider uppercase">FIND US AT VIKHROLI EAST</h2>
-          <p className="text-fitcat-cream/80 text-sm mt-2">
+          <h2 className="text-3xl font-bold text-[#E5C158] tracking-wider uppercase">FIND US AT VIKHROLI EAST</h2>
+          <p className="text-[#9A978F] text-sm mt-2">
             Right outside Vikhroli East Railway Station. Open daily from 6:30 AM to 9:30 AM.
           </p>
         </div>
@@ -205,26 +259,26 @@ export default function DesktopView() {
       </section>
 
       {/* Desktop About Section */}
-      <section id="about" className="px-8 py-16 bg-fitcat-darkgreen/60 border-t border-fitcat-gold/20">
+      <section id="about" className="px-8 py-16 bg-[#162118] border-t border-[#263629]">
         <div className="max-w-7xl mx-auto grid grid-cols-12 gap-12 items-center">
           <div className="col-span-5">
-            <div className="border-4 border-fitcat-gold rounded-2xl overflow-hidden shadow-2xl">
+            <div className="border-4 border-[#263629] rounded-2xl overflow-hidden shadow-2xl">
               <img src="/images/business_card.jpeg" alt="Fitcat Founder Business Card" className="w-full h-auto object-cover" />
             </div>
           </div>
           <div className="col-span-7 space-y-4">
-            <span className="text-xs font-bold text-fitcat-gold uppercase tracking-widest">Our Story & Mission</span>
-            <h2 className="text-3xl font-black text-fitcat-cream">About Fitcat Mumbai</h2>
-            <p className="text-fitcat-cream/90 text-sm leading-relaxed">
-              Founded by <strong>Harsh Karangutkar</strong>, Fitcat was built on a simple belief: fast morning food doesn't have to be oily or unhealthy. We provide clean, nutrient-dense breakfast options for daily commuters and fitness enthusiasts at Vikhroli East Station.
+            <span className="text-xs font-bold text-[#05c92f] uppercase tracking-widest">Our Story & Mission</span>
+            <h2 className="text-3xl font-bold text-[#E5C158]">About Fitcat Mumbai</h2>
+            <p className="text-[#9A978F] text-sm leading-relaxed">
+              Founded by <strong className="text-[#FAF9F5]">Harsh Karangutkar</strong>, Fitcat was built on a simple belief: fast morning food doesn't have to be oily or unhealthy. We provide clean, nutrient-dense breakfast options for daily commuters and fitness enthusiasts at Vikhroli East Station.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2 text-xs">
-              <div className="bg-fitcat-green p-3 rounded-lg border border-fitcat-gold/30">
-                <span className="font-bold text-fitcat-gold flex items-center gap-1.5 mb-0.5"><FaUserTie className="text-fitcat-gold" /> Founder</span>
+              <div className="bg-[#0a140c] p-3 rounded-lg border border-[#263629]">
+                <span className="font-bold text-[#E5C158] flex items-center gap-1.5 mb-0.5"><FaUserTie className="text-[#E5C158]" /> Founder</span>
                 <span>Harsh Karangutkar</span>
               </div>
-              <div className="bg-fitcat-green p-3 rounded-lg border border-fitcat-gold/30">
-                <span className="font-bold text-fitcat-gold block">📱 Instagram</span>
+              <div className="bg-[#0a140c] p-3 rounded-lg border border-[#263629]">
+                <span className="font-bold text-[#E5C158] block">📱 Instagram</span>
                 <a href="https://instagram.com/fitcatmumbai" target="_blank" rel="noreferrer" className="hover:underline flex items-center gap-1.5 mt-0.5 font-bold text-[#E1306C]">
                   <InstagramIcon className="w-3.5 h-3.5" color="#E1306C" />
                   <span>@fitcatmumbai</span>
@@ -236,7 +290,7 @@ export default function DesktopView() {
       </section>
 
       {/* Desktop Footer */}
-      <footer className="bg-fitcat-darkgreen border-t border-fitcat-gold/30 py-8 px-8 text-center text-xs text-fitcat-cream/70">
+      <footer className="bg-[#0f120f] border-t border-[#263629] py-8 px-8 text-center text-xs text-[#9A978F]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <Logo className="h-16 w-auto" />
           <p>© {new Date().getFullYear()} Fitcat (fitcat.in). All rights reserved. Vikhroli East, Mumbai.</p>

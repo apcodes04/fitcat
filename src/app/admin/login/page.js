@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import { auth, googleProvider } from "@/lib/firebase";
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { FaArrowLeft, FaTriangleExclamation, FaLock } from "react-icons/fa6";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -40,12 +41,12 @@ export default function AdminLoginPage() {
         router.push("/admin");
       } else {
         await signOut(auth);
-        setError(`⛔ Access Denied: (${user.email}) is not an authorized admin.`);
+        setError(`Access Denied: (${user.email}) is not an authorized admin.`);
       }
     } catch (err) {
       console.error("Google Sign-In Error details:", err);
       if (err.code === "auth/unauthorized-domain") {
-        setError("Domain not authorized in Firebase. Add your domain in Firebase Console ➔ Authentication ➔ Settings ➔ Authorized domains.");
+        setError("Domain not authorized in Firebase. Add your domain in Firebase Console -> Authentication -> Settings -> Authorized domains.");
       } else if (err.code === "auth/popup-closed-by-user") {
         setError("Sign-in popup was closed. Please try again.");
       } else {
@@ -66,8 +67,9 @@ export default function AdminLoginPage() {
         </div>
 
         {error && (
-          <div className="bg-red-600/90 text-white text-xs font-bold p-3 rounded-xl border border-red-400 text-center leading-relaxed">
-            {error}
+          <div className="bg-red-600/90 text-white text-xs font-bold p-3 rounded-xl border border-red-400 text-center leading-relaxed flex items-center justify-center gap-2">
+            <FaTriangleExclamation className="text-sm shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -93,8 +95,9 @@ export default function AdminLoginPage() {
         </div>
 
         <div className="pt-2 text-center">
-          <a href="/" className="text-xs text-[#E5C158] hover:underline font-bold">
-            ← Back to Main Website
+          <a href="/" className="text-xs text-[#E5C158] hover:underline font-bold inline-flex items-center gap-1.5">
+            <FaArrowLeft className="text-xs" />
+            <span>Back to Main Website</span>
           </a>
         </div>
       </div>

@@ -7,7 +7,22 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { subscribeToOrders, updateOrderStatusInFirestore, updateOrderInFirestore, deleteOrderFromFirestore } from "@/lib/orders";
 import { subscribeToMenuItems, saveMenuItemToFirestore, deleteMenuItemFromFirestore } from "@/lib/menu";
-import { FaChartSimple, FaGlobe, FaPlus, FaPenToSquare, FaTrashCan, FaCircleInfo, FaXmark, FaMobileScreen, FaCircleCheck } from "react-icons/fa6";
+import { 
+  FaChartSimple, 
+  FaGlobe, 
+  FaPlus, 
+  FaPenToSquare, 
+  FaTrashCan, 
+  FaCircleInfo, 
+  FaXmark, 
+  FaMobileScreen, 
+  FaCircleCheck, 
+  FaPhone, 
+  FaCalendarDays, 
+  FaClock, 
+  FaNoteSticky,
+  FaRightFromBracket
+} from "react-icons/fa6";
 import { MdOutlineRestaurantMenu } from "react-icons/md";
 
 // Utility function to compress & resize images client-side for ultra-fast loading
@@ -130,14 +145,14 @@ export default function AdminDashboardPage() {
     if (!editingOrder) return;
     await updateOrderInFirestore(editingOrder.id, editingOrder);
     setEditingOrder(null);
-    setStatusMessage("✅ Order updated successfully!");
+    setStatusMessage("Order updated successfully!");
     setTimeout(() => setStatusMessage(""), 3000);
   };
 
   const handleDeleteOrder = async (orderId) => {
     await deleteOrderFromFirestore(orderId);
     setDeletingOrderId(null);
-    setStatusMessage("🗑️ Order deleted from database.");
+    setStatusMessage("Order deleted from database.");
     setTimeout(() => setStatusMessage(""), 3000);
   };
 
@@ -147,14 +162,14 @@ export default function AdminDashboardPage() {
     if (!editingItem) return;
     await saveMenuItemToFirestore(editingItem);
     setEditingItem(null);
-    setStatusMessage("✅ Menu item saved to website!");
+    setStatusMessage("Menu item saved to website!");
     setTimeout(() => setStatusMessage(""), 3000);
   };
 
   const handleDeleteMenuItem = async (itemId) => {
     await deleteMenuItemFromFirestore(itemId);
     setDeletingMenuItemId(null);
-    setStatusMessage("🗑️ Menu item deleted from website.");
+    setStatusMessage("Menu item deleted from website.");
     setTimeout(() => setStatusMessage(""), 3000);
   };
 
@@ -205,9 +220,10 @@ export default function AdminDashboardPage() {
           </a>
           <button
             onClick={handleLogout}
-            className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-4 py-2 rounded-full text-xs font-bold transition border border-red-500/40"
+            className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-4 py-2 rounded-full text-xs font-bold transition border border-red-500/40 flex items-center gap-1.5"
           >
-            Log Out
+            <FaRightFromBracket className="text-xs" />
+            <span>Log Out</span>
           </button>
         </div>
       </header>
@@ -244,8 +260,9 @@ export default function AdminDashboardPage() {
       <main className="max-w-7xl mx-auto px-6 sm:px-8 py-8 space-y-8">
         {/* Status Notification */}
         {statusMessage && (
-          <div className="bg-[#05c92f] text-[#0f110f] font-bold p-3 rounded-full shadow border border-[#05c92f] text-center text-xs">
-            {statusMessage}
+          <div className="bg-[#05c92f] text-[#0f110f] font-bold p-3 rounded-full shadow border border-[#05c92f] text-center text-xs flex items-center justify-center gap-2">
+            <FaCircleCheck className="text-sm shrink-0" />
+            <span>{statusMessage}</span>
           </div>
         )}
 
@@ -282,8 +299,8 @@ export default function AdminDashboardPage() {
               </div>
 
               {orders.length === 0 ? (
-                <div className="text-center py-12 text-[#9A978F] text-xs space-y-2">
-                  <span className="text-4xl block">📱</span>
+                <div className="text-center py-12 text-[#9A978F] text-xs space-y-3">
+                  <FaMobileScreen className="text-4xl mx-auto text-[#E5C158]" />
                   <p>No orders logged yet. Place a test pre-order on the main site to see it appear here live!</p>
                 </div>
               ) : (
@@ -297,17 +314,24 @@ export default function AdminDashboardPage() {
                         <div className="flex items-center gap-3">
                           <h4 className="font-bold text-base text-[#FAF9F5]">{order.customerName}</h4>
                           {order.customerPhone && (
-                            <a href={`tel:${order.customerPhone}`} className="text-xs text-[#E5C158] hover:underline font-bold">
-                              📞 {order.customerPhone}
+                            <a href={`tel:${order.customerPhone}`} className="text-xs text-[#E5C158] hover:underline font-bold inline-flex items-center gap-1">
+                              <FaPhone className="text-[10px]" />
+                              <span>{order.customerPhone}</span>
                             </a>
                           )}
                           <span className="text-[11px] text-[#9A978F]">{order.formattedTime}</span>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-[#E5C158]">
-                          <span>📅 Date: <strong>{order.bookingDate}</strong></span>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-[#E5C158]">
+                          <span className="inline-flex items-center gap-1">
+                            <FaCalendarDays className="text-[10px] text-[#05c92f]" />
+                            <span>Date: <strong>{order.bookingDate}</strong></span>
+                          </span>
                           <span>•</span>
-                          <span>⏰ Time: <strong>{order.timeSlot}</strong></span>
+                          <span className="inline-flex items-center gap-1">
+                            <FaClock className="text-[10px] text-[#05c92f]" />
+                            <span>Time: <strong>{order.timeSlot}</strong></span>
+                          </span>
                         </div>
 
                         {/* Order Items list */}
@@ -323,7 +347,10 @@ export default function AdminDashboardPage() {
                         </div>
 
                         {order.notes && (
-                          <p className="text-xs text-[#9A978F] italic pt-1">📝 Note: {order.notes}</p>
+                          <p className="text-xs text-[#9A978F] italic pt-1 flex items-center gap-1.5">
+                            <FaNoteSticky className="text-xs text-[#E5C158] shrink-0" />
+                            <span>Note: {order.notes}</span>
+                          </p>
                         )}
                       </div>
 
@@ -345,10 +372,10 @@ export default function AdminDashboardPage() {
                                 : "bg-yellow-500 text-[#0f110f] border-yellow-400"
                             }`}
                           >
-                            <option value="Pending">🟡 Pending</option>
-                            <option value="Confirmed">🔵 Confirmed</option>
-                            <option value="Completed">🟢 Completed</option>
-                            <option value="Cancelled">🔴 Cancelled</option>
+                            <option value="Pending">● Pending</option>
+                            <option value="Confirmed">● Confirmed</option>
+                            <option value="Completed">● Completed</option>
+                            <option value="Cancelled">● Cancelled</option>
                           </select>
 
                           <button
@@ -476,8 +503,8 @@ export default function AdminDashboardPage() {
               <h3 className="text-lg font-bold text-[#E5C158]">
                 {editingItem.name ? `Edit "${editingItem.name}"` : "Add New Menu Item"}
               </h3>
-              <button onClick={() => setEditingItem(null)} className="text-[#9A978F] hover:text-[#FAF9F5] font-bold text-sm">
-                ✕
+              <button onClick={() => setEditingItem(null)} className="text-[#9A978F] hover:text-[#FAF9F5] p-1.5 rounded-full hover:bg-[#263629] transition">
+                <FaXmark className="w-5 h-5" />
               </button>
             </div>
 

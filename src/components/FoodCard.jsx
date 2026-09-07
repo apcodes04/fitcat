@@ -7,7 +7,7 @@ import { FaArrowRight, FaBan, FaChevronLeft, FaChevronRight } from "react-icons/
 export default function FoodCard({ item, index, onPreOrder, variant = "mobile" }) {
   const imageList = Array.isArray(item.images) && item.images.length > 0
     ? item.images
-    : (item.image && item.image.trim() !== "" ? [item.image.trim()] : []);
+    : (item.image && item.image.trim() !== "" ? [item.image.trim()] : ["/images/menu_poster.jpeg"]);
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [isPortrait, setIsPortrait] = useState(false);
@@ -49,7 +49,8 @@ export default function FoodCard({ item, index, onPreOrder, variant = "mobile" }
               onLoad={handleImageLoad}
               className="w-full h-full object-cover rounded transition-all duration-300"
               onError={(e) => {
-                e.target.style.display = 'none';
+                e.target.onerror = null;
+                e.target.src = "/images/menu_poster.jpeg";
               }}
             />
 
@@ -93,7 +94,7 @@ export default function FoodCard({ item, index, onPreOrder, variant = "mobile" }
           </div>
         )}
 
-        {/* Header Row: Category Badge & Golden Yellow Price */}
+        {/* Header Row: Category Badge & Golden Price */}
         <div className="flex justify-between items-start mb-2 gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] text-[#9A978F] font-mono">0{index + 1}</span>
@@ -102,13 +103,12 @@ export default function FoodCard({ item, index, onPreOrder, variant = "mobile" }
             </span>
           </div>
 
-          {/* Golden Yellow Price Tag */}
-          <span className="text-base font-extrabold text-[#E5C158] bg-[#0a140c] px-3 py-0.5 rounded-full border border-[#263629] tabular-nums shadow-inner flex-shrink-0">
+          <span className="text-base font-extrabold text-[#E5C158] bg-[#0a140c] px-3 py-0.5 rounded-full border border-[#263629] tabular-nums flex-shrink-0 shadow-inner">
             ₹{item.price}
           </span>
         </div>
 
-        {/* Golden Yellow Product Name */}
+        {/* Golden Product Title */}
         <h3 className="text-base sm:text-lg font-bold text-[#E5C158] tracking-[-.02em]">
           {item.name}
         </h3>
