@@ -41,7 +41,7 @@ export default function DesktopView() {
         </div>
         <div className="flex items-center gap-4">
           <a
-            href="https://wa.me/917977034609"
+            href="https://api.whatsapp.com/send?phone=917977034609"
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1.5 text-[#25D366] hover:underline font-bold"

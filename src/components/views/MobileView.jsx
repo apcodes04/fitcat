@@ -63,7 +63,7 @@ export default function MobileView() {
           {/* Phone Number and Instagram Handle in a SINGLE LINE */}
           <div className="whitespace-nowrap flex items-center gap-1.5 text-[9px] sm:text-[10px] text-[#9A978F] font-bold mt-0.5">
             <a
-              href="https://wa.me/917977034609"
+              href="https://api.whatsapp.com/send?phone=917977034609"
               target="_blank"
               rel="noreferrer"
               className="text-[#25D366] hover:underline flex items-center gap-0.5 whitespace-nowrap"

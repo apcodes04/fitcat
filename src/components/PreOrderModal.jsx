@@ -97,15 +97,18 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
       source: "website_whatsapp",
     };
 
-    // 1. Save order to Firebase Firestore
-    await saveOrderToFirestore(orderPayload);
+    // 1. Save order to Firebase Firestore in background (non-blocking for instant redirection)
+    saveOrderToFirestore(orderPayload).catch((err) =>
+      console.error("Firestore save error:", err)
+    );
 
-    // 2. Format WhatsApp Pre-Filled Message
+    // 2. Format WhatsApp Pre-Filled Message with clean standard emojis
     let orderSummary = orderItems
       .map((item) => `• ${item.name} x ${item.qty} (₹${item.price * item.qty})`)
       .join("\n");
 
-    const text = `🐾 *FITCAT PRE-BOOKING ORDER* 🐾\n` +
+    const text =
+      `🥗 *FITCAT PRE-BOOKING ORDER* 🥗\n` +
       `-----------------------------\n` +
       `👤 *Customer*: ${customerName || "Customer"}\n` +
       (customerPhone ? `📞 *Phone*: ${customerPhone}\n` : "") +
@@ -113,18 +116,22 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
       `⏰ *Pickup Time Slot*: ${timeSlot} (Store timings: 6:30 AM to 9:30 AM)\n` +
       `📍 *Location*: Vikhroli East Railway Station\n` +
       `-----------------------------\n` +
-      `🍽️ *ORDER ITEMS*:\n${orderSummary}\n` +
+      `🛒 *ORDER ITEMS*:\n${orderSummary}\n` +
       `-----------------------------\n` +
       `💰 *Total Amount*: ₹${calculateTotal()}\n` +
       (notes ? `📝 *Notes*: ${notes}\n` : "") +
       `-----------------------------\n` +
-      `Please confirm my pre-order! Eat Clean. Feel Great! 🌿`;
+      `✨ Please confirm my pre-order! Eat Clean. Feel Great! 🌿`;
 
-    const whatsappUrl = `https://wa.me/917977034609?text=${encodeURIComponent(text)}`;
-    window.open(whatsappUrl, "_blank");
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=917977034609&text=${encodeURIComponent(text)}`;
 
-    setIsSubmitting(false);
-    onClose();
+    // 3. Use direct window.location.href so Instagram in-app browser & iOS Safari launch WhatsApp deep-link instantly
+    window.location.href = whatsappUrl;
+
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onClose();
+    }, 500);
   };
 
   return (
