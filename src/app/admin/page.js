@@ -608,17 +608,17 @@ export default function AdminDashboardPage() {
                         )}
                       </div>
 
-                      {/* Amount, Orange Edit Button, Status Dropdown & Delete */}
-                      <div className="flex flex-col items-end gap-2 w-full md:w-auto border-t md:border-t-0 border-[#262a26] pt-3 md:pt-0 shrink-0">
-                        <span className="text-xl font-extrabold text-yellow-400 tabular-nums">
+                      {/* Amount, Orange Edit Button, Status Dropdown & Delete (Flex Wrap for 100% Fit on Mobile) */}
+                      <div className="flex flex-col items-start sm:items-end gap-2 w-full md:w-auto border-t md:border-t-0 border-[#262a26] pt-3 md:pt-0 shrink-0">
+                        <span className="text-xl font-extrabold text-yellow-400 tabular-nums self-end">
                           ₹{order.totalAmount}
                         </span>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 w-full">
                           {/* ORANGE EDIT BUTTON */}
                           <button
                             onClick={() => setEditingOrder(order)}
-                            className="bg-orange-600/20 hover:bg-orange-600 text-orange-300 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-orange-500/40 transition flex items-center gap-1.5 shadow-sm"
+                            className="bg-orange-600/25 hover:bg-orange-600 text-orange-300 hover:text-white text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-full border border-orange-500/40 transition flex items-center gap-1 shadow-sm shrink-0"
                             title="Edit Order Details & Items"
                           >
                             <FaPenToSquare className="w-3 h-3 text-orange-400" />
@@ -628,7 +628,7 @@ export default function AdminDashboardPage() {
                           <select
                             value={order.status || "Pending"}
                             onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                            className={`text-xs font-semibold px-3 py-1.5 rounded-full border focus:outline-none cursor-pointer ${
+                            className={`text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-full border focus:outline-none cursor-pointer shrink-0 ${
                               order.status === "Completed"
                                 ? "bg-green-600/20 text-green-300 border-green-500/40"
                                 : order.status === "Confirmed"
@@ -646,7 +646,7 @@ export default function AdminDashboardPage() {
 
                           <button
                             onClick={() => setDeletingOrderId(order.id)}
-                            className="bg-red-600/15 hover:bg-red-600 hover:text-white text-red-300 text-xs font-semibold px-3 py-1.5 rounded-full border border-red-500/30 transition flex items-center gap-1"
+                            className="bg-red-600/15 hover:bg-red-600 hover:text-white text-red-300 text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-full border border-red-500/30 transition flex items-center gap-1 shrink-0"
                             title="Delete Order Log"
                           >
                             <FaTrashCan className="w-3 h-3" />
