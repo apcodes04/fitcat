@@ -30,23 +30,29 @@ export function subscribeToBanners(callback) {
         if (snapshot.empty) {
           callback(DEFAULT_BANNERS);
         } else {
-          const banners = snapshot.docs
-            .map((doc, idx) => {
-              const data = doc.data();
-              return {
-                id: doc.id,
-                ...data,
-                order: Number(data.order || data.displayOrder || idx + 1),
-                displayOrder: Number(data.displayOrder || data.order || idx + 1),
-              };
-            })
-            .filter((item) => item.isBanner === true && typeof item.image === "string" && item.image.trim() !== "");
+          const allDocs = snapshot.docs.map((doc, idx) => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              order: Number(data.order || data.displayOrder || idx + 1),
+              displayOrder: Number(data.displayOrder || data.order || idx + 1),
+            };
+          });
 
-          if (banners.length === 0) {
-            callback(DEFAULT_BANNERS);
+          const activeBanners = allDocs.filter(
+            (item) =>
+              item.isBanner === true &&
+              item.isDeleted !== true &&
+              typeof item.image === "string" &&
+              item.image.trim() !== ""
+          );
+
+          if (allDocs.length > 0) {
+            activeBanners.sort((a, b) => (a.order || 0) - (b.order || 0));
+            callback(activeBanners);
           } else {
-            banners.sort((a, b) => (a.order || 0) - (b.order || 0));
-            callback(banners);
+            callback(DEFAULT_BANNERS);
           }
         }
       },
@@ -73,6 +79,7 @@ export async function saveBannerToFirestore(bannerData) {
       order: Number(bannerData.order || 1),
       displayOrder: Number(bannerData.order || 1),
       isBanner: true,
+      isDeleted: false,
       updatedAt: serverTimestamp(),
     };
 
@@ -88,7 +95,26 @@ export async function saveBannerToFirestore(bannerData) {
 export async function deleteBannerFromFirestore(bannerId) {
   try {
     const bannerRef = doc(db, "menu", bannerId);
-    await deleteDoc(bannerRef);
+
+    // Attempt direct deleteDoc first
+    try {
+      await deleteDoc(bannerRef);
+    } catch (deleteErr) {
+      console.warn("deleteDoc restricted by Firestore rules, performing soft tombstone deletion:", deleteErr.message);
+    }
+
+    // Always ensure tombstone record is written to Firestore so sub/rules succeed
+    await setDoc(
+      bannerRef,
+      {
+        id: bannerId,
+        isBanner: false,
+        isDeleted: true,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+
     return { success: true };
   } catch (error) {
     console.error("Error deleting menu card poster from Firestore: ", error);

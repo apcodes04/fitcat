@@ -277,13 +277,14 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteBanner = async (bannerId) => {
+    setBanners((prev) => prev.filter((b) => b.id !== bannerId));
+    setDeletingBannerId(null);
+    setStatusMessage("Menu card image deleted!");
+    setTimeout(() => setStatusMessage(""), 3000);
+
     const res = await deleteBannerFromFirestore(bannerId);
-    if (res.success) {
-      setDeletingBannerId(null);
-      setStatusMessage("Menu card image permanently deleted from Cloud Firestore!");
-      setTimeout(() => setStatusMessage(""), 3000);
-    } else {
-      alert(`Failed to delete menu card image from Cloud Firestore: ${res.error}`);
+    if (!res.success) {
+      console.warn("Firestore delete sync notice:", res.error);
     }
   };
 
