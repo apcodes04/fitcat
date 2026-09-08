@@ -5,37 +5,52 @@ import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { subscribeToOrders, updateOrderStatusInFirestore, updateOrderInFirestore, deleteOrderFromFirestore, formatBookingDateText } from "@/lib/orders";
-import { subscribeToMenuItems, saveMenuItemToFirestore, deleteMenuItemFromFirestore } from "@/lib/menu";
-import { subscribeToBanners, saveBannerToFirestore, deleteBannerFromFirestore } from "@/lib/banners";
-import { 
-  FaChartSimple, 
-  FaGlobe, 
-  FaPlus, 
-  FaPenToSquare, 
-  FaTrashCan, 
-  FaCircleInfo, 
-  FaXmark, 
-  FaMobileScreen, 
-  FaCircleCheck, 
-  FaPhone, 
-  FaCalendarDays, 
-  FaClock, 
+import {
+  subscribeToOrders,
+  updateOrderStatusInFirestore,
+  updateOrderInFirestore,
+  deleteOrderFromFirestore,
+  formatBookingDateText,
+} from "@/lib/orders";
+import {
+  subscribeToMenuItems,
+  saveMenuItemToFirestore,
+  deleteMenuItemFromFirestore,
+} from "@/lib/menu";
+import {
+  subscribeToBanners,
+  saveBannerToFirestore,
+  deleteBannerFromFirestore,
+} from "@/lib/banners";
+
+// Modular Admin UI Components (AcadBytes Dark System)
+import AdminDateFilterModule from "@/components/admin/AdminDateFilterModule";
+import AdminStatsGrid from "@/components/admin/AdminStatsGrid";
+import AdminItemDemandRanking from "@/components/admin/AdminItemDemandRanking";
+import AdminCustomerGroupCard from "@/components/admin/AdminCustomerGroupCard";
+
+import {
+  FaChartSimple,
+  FaGlobe,
+  FaPlus,
+  FaPenToSquare,
+  FaTrashCan,
+  FaXmark,
+  FaMobileScreen,
+  FaCircleCheck,
+  FaPhone,
+  FaCalendarDays,
+  FaClock,
   FaNoteSticky,
   FaRightFromBracket,
   FaImage,
-  FaArrowUp,
-  FaArrowDown,
   FaUserGroup,
-  FaFilter,
   FaListUl,
   FaUtensils,
-  FaChevronDown,
-  FaChevronUp
 } from "react-icons/fa6";
 import { MdOutlineRestaurantMenu } from "react-icons/md";
 
-// Utility function to compress & resize images client-side for ultra-fast loading
+// Client-side WebP Image Compressor for Ultra-Fast Loading
 const compressAndResizeImage = (file, maxWidth = 800, quality = 0.75) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -58,7 +73,6 @@ const compressAndResizeImage = (file, maxWidth = 800, quality = 0.75) => {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Compress to WebP Data URL
         const compressedDataUrl = canvas.toDataURL("image/webp", quality);
         resolve(compressedDataUrl);
       };
@@ -73,12 +87,16 @@ export default function AdminDashboardPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authed, setAuthed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Tabs state
   const [activeTab, setActiveTab] = useState("orders"); // "orders" | "menu" | "banners"
+
+  // Firestore real-time collections state
   const [orders, setOrders] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [banners, setBanners] = useState([]);
-  
-  // Modals & Filter state
+
+  // Modals state
   const [editingItem, setEditingItem] = useState(null);
   const [editingBanner, setEditingBanner] = useState(null);
   const [deletingOrderId, setDeletingOrderId] = useState(null);
@@ -86,15 +104,18 @@ export default function AdminDashboardPage() {
   const [deletingBannerId, setDeletingBannerId] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
 
-  // Date filtering & Customer grouping state
-  const [selectedDateFilter, setSelectedDateFilter] = useState("ALL");
+  // Date Filtering Module state (Default is TOMORROW for store pre-orders)
+  const [selectedDateFilter, setSelectedDateFilter] = useState("TOMORROW"); // "TOMORROW" | "TODAY" | "DAY_AFTER" | "CUSTOM" | "ALL"
+  const [customDateValue, setCustomDateValue] = useState(
+    new Date(Date.now() + 86400000).toISOString().split("T")[0]
+  );
   const [orderViewMode, setOrderViewMode] = useState("grouped"); // "grouped" | "list"
   const [expandedCustomers, setExpandedCustomers] = useState({});
 
   const toggleCustomerExpand = (name) => {
     setExpandedCustomers((prev) => ({
       ...prev,
-      [name]: prev[name] === undefined ? false : !prev[name], // default expanded when false/undefined
+      [name]: prev[name] === undefined ? false : !prev[name], // expanded by default unless true in collapsed state
     }));
   };
 
@@ -136,22 +157,28 @@ export default function AdminDashboardPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-[#0f120f] text-[#FAF9F5] flex flex-col items-center justify-center space-y-4 p-4">
-        <Logo className="h-16 w-auto animate-pulse" />
-        <p className="text-xs text-[#9A978F]">Verifying Admin Access...</p>
+      <div className="min-h-screen bg-[#0f110f] text-[#faf9f5] flex flex-col items-center justify-center space-y-4 p-4">
+        <Logo className="h-14 w-auto animate-pulse" />
+        <p className="text-xs text-[#9a978f] font-medium tracking-wide">
+          Verifying Admin Credentials...
+        </p>
       </div>
     );
   }
 
   if (!authed) {
     return (
-      <div className="min-h-screen bg-[#0f120f] text-[#FAF9F5] flex flex-col items-center justify-center space-y-4 p-4 text-center">
-        <Logo className="h-16 w-auto" />
-        <h2 className="text-xl font-bold text-[#E5C158]">Admin Portal Restricted</h2>
-        <p className="text-xs text-[#9A978F] max-w-xs">Redirecting to login portal...</p>
+      <div className="min-h-screen bg-[#0f110f] text-[#faf9f5] flex flex-col items-center justify-center space-y-4 p-4 text-center">
+        <Logo className="h-14 w-auto" />
+        <h2 className="text-xl font-semibold text-[#faf9f5] tracking-[-0.03em]">
+          Admin Portal Restricted
+        </h2>
+        <p className="text-xs text-[#9a978f] max-w-xs">
+          Redirecting to secure login page...
+        </p>
         <a
           href="/admin/login"
-          className="bg-[#05c92f] text-[#0f110f] font-bold text-xs px-5 py-2.5 rounded-full shadow hover:bg-[#3ade5c] transition"
+          className="bg-[#05c92f] text-[#0f110f] font-semibold text-xs px-6 py-2.5 rounded-full shadow hover:bg-[#3ade5c] transition-all duration-200"
         >
           Go to Admin Login
         </a>
@@ -237,29 +264,49 @@ export default function AdminDashboardPage() {
     router.push("/admin/login");
   };
 
-  // Analytics & Filtering Calculations
-  const uniqueBookingDates = Array.from(
-    new Set(
-      orders
-        .map((o) => formatBookingDateText(o.bookingDate))
-        .filter(Boolean)
-    )
-  );
+  // DYNAMIC RELATIVE DATE CALCULATIONS
+  const now = new Date();
+  const todayISO = now.toISOString().split("T")[0];
+  const tomorrowISO = new Date(now.getTime() + 86400000).toISOString().split("T")[0];
+  const dayAfterISO = new Date(now.getTime() + 86400000 * 2).toISOString().split("T")[0];
 
-  const todayFormatted = formatBookingDateText(new Date().toISOString().split("T")[0]);
+  const formattedToday = formatBookingDateText(todayISO);
+  const formattedTomorrow = formatBookingDateText(tomorrowISO);
+  const formattedDayAfter = formatBookingDateText(dayAfterISO);
 
-  // Filter orders based on selected date
+  let activeTargetDateText = null;
+  if (selectedDateFilter === "TOMORROW") {
+    activeTargetDateText = formattedTomorrow;
+  } else if (selectedDateFilter === "TODAY") {
+    activeTargetDateText = formattedToday;
+  } else if (selectedDateFilter === "DAY_AFTER") {
+    activeTargetDateText = formattedDayAfter;
+  } else if (selectedDateFilter === "CUSTOM") {
+    activeTargetDateText = formatBookingDateText(customDateValue);
+  }
+
+  // Filter orders based on active target date
   const filteredOrders = orders.filter((order) => {
     if (selectedDateFilter === "ALL") return true;
-    if (selectedDateFilter === "TODAY") {
-      return formatBookingDateText(order.bookingDate) === todayFormatted;
-    }
-    return formatBookingDateText(order.bookingDate) === selectedDateFilter;
+    if (!activeTargetDateText) return true;
+    return formatBookingDateText(order.bookingDate) === activeTargetDateText;
   });
 
-  // Analytics calculations on filtered orders
+  const activeDateLabel =
+    selectedDateFilter === "ALL"
+      ? "All Dates"
+      : selectedDateFilter === "TOMORROW"
+      ? `Tomorrow (${formattedTomorrow})`
+      : selectedDateFilter === "TODAY"
+      ? `Today (${formattedToday})`
+      : selectedDateFilter === "DAY_AFTER"
+      ? formattedDayAfter
+      : formatBookingDateText(customDateValue) || "Custom Date";
+
+  // Analytics on filtered orders
   const totalFoodItemsOrdered = filteredOrders.reduce((sum, order) => {
-    const itemsCount = order.items?.reduce((itemSum, item) => itemSum + (Number(item.qty) || 1), 0) || 0;
+    const itemsCount =
+      order.items?.reduce((itemSum, item) => itemSum + (Number(item.qty) || 1), 0) || 0;
     return sum + itemsCount;
   }, 0);
 
@@ -267,10 +314,15 @@ export default function AdminDashboardPage() {
     filteredOrders.map((o) => (o.customerName || "").trim().toLowerCase()).filter(Boolean)
   ).size;
 
-  const filteredTotalRevenue = filteredOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
-  const filteredPendingCount = filteredOrders.filter((o) => (o.status || "Pending") === "Pending").length;
+  const filteredTotalRevenue = filteredOrders.reduce(
+    (sum, o) => sum + (Number(o.totalAmount) || 0),
+    0
+  );
+  const filteredPendingCount = filteredOrders.filter(
+    (o) => (o.status || "Pending") === "Pending"
+  ).length;
 
-  // Item-wise pre-order demand summary map
+  // Item Demand Breakdown
   const itemDemandSummary = {};
   filteredOrders.forEach((order) => {
     order.items?.forEach((item) => {
@@ -284,7 +336,7 @@ export default function AdminDashboardPage() {
     .map(([itemName, totalQty]) => ({ itemName, totalQty }))
     .sort((a, b) => b.totalQty - a.totalQty);
 
-  // Group filtered orders by Customer Name
+  // Group Filtered Orders by Customer Name
   const groupedOrdersMap = {};
   filteredOrders.forEach((order) => {
     const key = (order.customerName || "Guest Customer").trim();
@@ -299,7 +351,8 @@ export default function AdminDashboardPage() {
     }
     groupedOrdersMap[key].ordersList.push(order);
     groupedOrdersMap[key].totalSpent += Number(order.totalAmount) || 0;
-    const orderItemsCount = order.items?.reduce((sum, i) => sum + (Number(i.qty) || 1), 0) || 0;
+    const orderItemsCount =
+      order.items?.reduce((sum, i) => sum + (Number(i.qty) || 1), 0) || 0;
     groupedOrdersMap[key].totalItemsCount += orderItemsCount;
     if (!groupedOrdersMap[key].customerPhone && order.customerPhone) {
       groupedOrdersMap[key].customerPhone = order.customerPhone;
@@ -309,30 +362,35 @@ export default function AdminDashboardPage() {
   const customerGroupsList = Object.values(groupedOrdersMap);
 
   return (
-    <div className="min-h-screen bg-[#0f120f] text-[#FAF9F5] font-sans selection:bg-[#05c92f]/20">
-      {/* Admin Top Header */}
-      <header className="bg-[#162118] border-b border-[#263629] px-6 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-4 shadow-md">
+    <div className="min-h-screen bg-[#0f110f] text-[#faf9f5] font-sans selection:bg-[#05c92f]/20">
+      {/* Top Admin Header (AcadBytes Dark Specs) */}
+      <header className="bg-[#171a17] border-b border-[#262a26] px-6 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-4">
-          <Logo className="h-10 w-auto" />
-          <span className="bg-[#E5C158] text-[#0f110f] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
-            Admin Dashboard
+          <Logo className="h-9 w-auto" />
+          <span className="bg-[#0e2413] border border-[#1b4224] text-[#05c92f] text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
+            ADMIN DASHBOARD
           </span>
         </div>
 
         <div className="flex items-center gap-4">
           {currentUser && (
-            <span className="text-xs text-[#E5C158] font-bold bg-[#0a140c] px-3 py-1.5 rounded-full border border-[#263629] flex items-center gap-2">
+            <span className="text-xs text-[#faf9f5] font-medium bg-[#0a0c0a] px-3.5 py-1.5 rounded-full border border-[#262a26] flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#05c92f] animate-pulse"></span>
               {currentUser.email}
             </span>
           )}
-          <a href="/" target="_blank" rel="noreferrer" className="text-xs font-bold text-[#FAF9F5] hover:text-[#E5C158] flex items-center gap-1.5 transition">
+          <a
+            href="/"
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs font-semibold text-[#faf9f5] hover:text-[#05c92f] flex items-center gap-1.5 transition-all duration-200"
+          >
             <FaGlobe className="text-[#05c92f]" />
             <span>Live Site</span>
           </a>
           <button
             onClick={handleLogout}
-            className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-4 py-2 rounded-full text-xs font-bold transition border border-red-500/40 flex items-center gap-1.5"
+            className="bg-red-600/15 hover:bg-red-600 text-red-300 hover:text-white px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 border border-red-500/30 flex items-center gap-1.5"
           >
             <FaRightFromBracket className="text-xs" />
             <span>Log Out</span>
@@ -340,341 +398,147 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      {/* Navigation Tabs */}
-      <div className="bg-[#0a140c] border-b border-[#263629] px-6 sm:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setActiveTab("orders")}
-            className={`px-5 py-2.5 rounded-full font-bold text-xs transition flex items-center gap-2 ${
-              activeTab === "orders"
-                ? "bg-[#E5C158] text-[#0f110f] shadow-sm"
-                : "bg-[#162118] text-[#9A978F] hover:text-[#FAF9F5] border border-[#263629]"
-            }`}
-          >
-            <FaChartSimple className="text-xs" />
-            <span>WhatsApp Orders Log ({orders.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("menu")}
-            className={`px-5 py-2.5 rounded-full font-bold text-xs transition flex items-center gap-2 ${
-              activeTab === "menu"
-                ? "bg-[#E5C158] text-[#0f110f] shadow-sm"
-                : "bg-[#162118] text-[#9A978F] hover:text-[#FAF9F5] border border-[#263629]"
-            }`}
-          >
-            <MdOutlineRestaurantMenu className="text-sm" />
-            <span>Food Menu & Prices ({menuItems.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("banners")}
-            className={`px-5 py-2.5 rounded-full font-bold text-xs transition flex items-center gap-2 ${
-              activeTab === "banners"
-                ? "bg-[#E5C158] text-[#0f110f] shadow-sm"
-                : "bg-[#162118] text-[#9A978F] hover:text-[#FAF9F5] border border-[#263629]"
-            }`}
-          >
-            <FaImage className="text-xs" />
-            <span>Promotional Banners ({banners.length})</span>
-          </button>
+      {/* Segmented Navigation Tab Switcher */}
+      <div className="bg-[#0a0c0a] border-b border-[#262a26] px-6 sm:px-8 py-3">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-[#171a17] p-1 rounded-full border border-[#262a26] inline-flex flex-wrap items-center gap-1">
+            <button
+              onClick={() => setActiveTab("orders")}
+              className={`px-5 py-2 rounded-full font-semibold text-xs transition-all duration-200 flex items-center gap-2 ${
+                activeTab === "orders"
+                  ? "bg-[#faf9f5] text-[#0f110f] shadow-sm"
+                  : "text-[#9a978f] hover:text-[#faf9f5]"
+              }`}
+            >
+              <FaChartSimple className="text-xs" />
+              <span>WhatsApp Pre-Orders ({orders.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("menu")}
+              className={`px-5 py-2 rounded-full font-semibold text-xs transition-all duration-200 flex items-center gap-2 ${
+                activeTab === "menu"
+                  ? "bg-[#faf9f5] text-[#0f110f] shadow-sm"
+                  : "text-[#9a978f] hover:text-[#faf9f5]"
+              }`}
+            >
+              <MdOutlineRestaurantMenu className="text-sm" />
+              <span>Menu & Prices ({menuItems.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("banners")}
+              className={`px-5 py-2 rounded-full font-semibold text-xs transition-all duration-200 flex items-center gap-2 ${
+                activeTab === "banners"
+                  ? "bg-[#faf9f5] text-[#0f110f] shadow-sm"
+                  : "text-[#9a978f] hover:text-[#faf9f5]"
+              }`}
+            >
+              <FaImage className="text-xs" />
+              <span>Banners Carousel ({banners.length})</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Main Admin Content */}
+      {/* Main Admin Dashboard Body */}
       <main className="max-w-7xl mx-auto px-6 sm:px-8 py-8 space-y-8">
-        {/* Status Notification */}
+        {/* Status Notification Toast */}
         {statusMessage && (
-          <div className="bg-[#05c92f] text-[#0f110f] font-bold p-3 rounded-full shadow border border-[#05c92f] text-center text-xs flex items-center justify-center gap-2">
+          <div className="bg-[#0e2413] text-[#05c92f] font-semibold p-3.5 rounded-full shadow border border-[#1b4224] text-center text-xs flex items-center justify-center gap-2 animate-fade-in">
             <FaCircleCheck className="text-sm shrink-0" />
             <span>{statusMessage}</span>
           </div>
         )}
 
-        {/* TAB 1: REAL-TIME WHATSAPP ORDERS LOG */}
+        {/* TAB 1: WHATSAPP PRE-ORDERS LOG & DATE MODULE */}
         {activeTab === "orders" && (
           <div className="space-y-6">
-            {/* Filter & View Mode Controls Bar */}
-            <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                <span className="text-xs font-bold text-[#E5C158] flex items-center gap-1.5">
-                  <FaFilter className="text-xs text-[#05c92f]" />
-                  <span>Filter by Date:</span>
-                </span>
-                <select
-                  value={selectedDateFilter}
-                  onChange={(e) => setSelectedDateFilter(e.target.value)}
-                  className="bg-[#0a140c] text-[#FAF9F5] border border-[#263629] text-xs font-bold px-4 py-2 rounded-full focus:outline-none focus:border-[#05c92f] cursor-pointer shadow-sm"
-                >
-                  <option value="ALL">📅 All Pre-Order Dates ({orders.length} orders)</option>
-                  <option value="TODAY">🔥 Today ({todayFormatted})</option>
-                  {uniqueBookingDates.map((dateStr, idx) => (
-                    <option key={idx} value={dateStr}>
-                      📆 {dateStr}
-                    </option>
-                  ))}
-                </select>
-                {selectedDateFilter !== "ALL" && (
-                  <button
-                    onClick={() => setSelectedDateFilter("ALL")}
-                    className="text-[11px] font-bold text-[#E5C158] bg-[#0a140c] hover:bg-[#263629] px-3 py-1.5 rounded-full border border-[#263629] transition"
-                  >
-                    Clear Filter
-                  </button>
-                )}
-              </div>
+            {/* 1. DYNAMIC PRE-ORDER DATE MODULE */}
+            <AdminDateFilterModule
+              orders={orders}
+              selectedDateFilter={selectedDateFilter}
+              setSelectedDateFilter={setSelectedDateFilter}
+              customDateValue={customDateValue}
+              setCustomDateValue={setCustomDateValue}
+            />
 
-              <div className="flex items-center gap-2 bg-[#0a140c] p-1 rounded-full border border-[#263629] w-full md:w-auto justify-center">
-                <button
-                  onClick={() => setOrderViewMode("grouped")}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${
-                    orderViewMode === "grouped"
-                      ? "bg-[#E5C158] text-[#0f110f] shadow-sm"
-                      : "text-[#9A978F] hover:text-[#FAF9F5]"
-                  }`}
-                >
-                  <FaUserGroup className="text-xs" />
-                  <span>Grouped by Customer ({customerGroupsList.length})</span>
-                </button>
-                <button
-                  onClick={() => setOrderViewMode("list")}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${
-                    orderViewMode === "list"
-                      ? "bg-[#E5C158] text-[#0f110f] shadow-sm"
-                      : "text-[#9A978F] hover:text-[#FAF9F5]"
-                  }`}
-                >
-                  <FaListUl className="text-xs" />
-                  <span>All Orders List ({filteredOrders.length})</span>
-                </button>
-              </div>
-            </div>
+            {/* 2. TOP ANALYTICS STATS GRID */}
+            <AdminStatsGrid
+              totalFoodItemsOrdered={totalFoodItemsOrdered}
+              uniqueCustomersCount={uniqueCustomersCount}
+              filteredTotalRevenue={filteredTotalRevenue}
+              filteredPendingCount={filteredPendingCount}
+              filteredOrdersCount={filteredOrders.length}
+              dateLabel={activeDateLabel}
+            />
 
-            {/* Top Analytics Summary Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
-                <span className="text-[11px] font-bold text-[#E5C158] uppercase tracking-wider block">Total Food Pre-Orders</span>
-                <h3 className="text-3xl font-extrabold text-[#FAF9F5] mt-1 flex items-center gap-2">
-                  <span>{totalFoodItemsOrdered}</span>
-                  <span className="text-xs font-normal text-[#9A978F]">items</span>
-                </h3>
-                <p className="text-[10px] text-[#9A978F] mt-1">Across {filteredOrders.length} pre-order tickets</p>
-              </div>
+            {/* 3. ITEM DEMAND RANKING SUMMARY */}
+            <AdminItemDemandRanking
+              rankedItemDemand={rankedItemDemand}
+              dateLabel={activeDateLabel}
+            />
 
-              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
-                <span className="text-[11px] font-bold text-[#E5C158] uppercase tracking-wider block">Unique Customers</span>
-                <h3 className="text-3xl font-extrabold text-[#FAF9F5] mt-1 flex items-center gap-2">
-                  <span>{uniqueCustomersCount}</span>
-                  <span className="text-xs font-normal text-[#9A978F]">people</span>
-                </h3>
-                <p className="text-[10px] text-[#9A978F] mt-1">Pre-ordered under their name</p>
-              </div>
-
-              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
-                <span className="text-[11px] font-bold text-[#E5C158] uppercase tracking-wider block">Projected Revenue</span>
-                <h3 className="text-3xl font-extrabold text-[#E5C158] mt-1">₹{filteredTotalRevenue}</h3>
-                <p className="text-[10px] text-[#9A978F] mt-1">Total revenue from selection</p>
-              </div>
-
-              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
-                <span className="text-[11px] font-bold text-[#E5C158] uppercase tracking-wider block">Pending Queue</span>
-                <h3 className="text-3xl font-extrabold text-yellow-400 mt-1">{filteredPendingCount}</h3>
-                <p className="text-[10px] text-[#9A978F] mt-1">Awaiting confirmation</p>
-              </div>
-            </div>
-
-            {/* Menu Items Pre-Order Demand Ranking Summary */}
-            {rankedItemDemand.length > 0 && (
-              <div className="bg-[#162118] p-6 rounded-[.75rem] border border-[#263629] shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-[#263629] pb-3">
-                  <div className="flex items-center gap-2">
-                    <FaUtensils className="text-[#05c92f] text-sm" />
-                    <h3 className="text-base font-bold text-[#E5C158]">Item-Wise Pre-Order Demand Ranking</h3>
-                  </div>
-                  <span className="text-xs text-[#9A978F] font-bold">
-                    {selectedDateFilter === "ALL" ? "All-Time Ranking" : `Ranked for ${selectedDateFilter}`}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {rankedItemDemand.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-[#0a140c] p-3.5 rounded-xl border border-[#263629] flex items-center justify-between gap-3 shadow-sm"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="w-7 h-7 rounded-full bg-[#162118] border border-[#E5C158]/40 text-[#E5C158] font-black text-xs flex items-center justify-center shrink-0">
-                          #{idx + 1}
-                        </span>
-                        <span className="text-xs font-bold text-[#FAF9F5] truncate">{item.itemName}</span>
-                      </div>
-                      <span className="bg-[#0e2413] text-[#05c92f] border border-[#1b4224] text-xs font-extrabold px-3 py-1 rounded-full shrink-0">
-                        {item.totalQty} pre-ordered
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Main Orders View Section */}
-            <div className="bg-[#162118] rounded-[.75rem] border border-[#263629] p-6 shadow-sm space-y-4">
-              <div className="flex justify-between items-center border-b border-[#263629] pb-4">
+            {/* 4. ORDERS VIEW DIRECTORY */}
+            <div className="bg-[#171a17] rounded-xl border border-[#262a26] p-6 shadow-sm space-y-4 transition-all duration-200 hover:border-[#363b36]">
+              {/* Directory Header Bar with View Mode Switcher */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#262a26] pb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-[#E5C158]">
-                    {orderViewMode === "grouped" ? "Customer Pre-Orders Directory" : "WhatsApp Pre-Orders List"}
+                  <h2 className="text-lg font-semibold text-[#faf9f5]">
+                    {orderViewMode === "grouped"
+                      ? "Customer Pre-Orders Directory"
+                      : "WhatsApp Pre-Orders Log"}
                   </h2>
-                  <p className="text-xs text-[#9A978F] mt-0.5">
-                    {selectedDateFilter === "ALL"
-                      ? "Showing all pre-orders from database"
-                      : `Showing pre-orders for ${selectedDateFilter}`}
+                  <p className="text-xs text-[#9a978f] mt-0.5">
+                    Showing pre-orders for <strong>{activeDateLabel}</strong> ({filteredOrders.length} tickets)
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1.5 bg-[#0e2413] text-[#05c92f] border border-[#1b4224] text-xs px-3 py-1 rounded-full font-bold">
-                  <span className="w-2 h-2 rounded-full bg-[#05c92f] animate-pulse"></span>
-                  Live Firebase Synchronized
-                </span>
+
+                <div className="flex items-center gap-2 bg-[#0a0c0a] p-1 rounded-full border border-[#262a26] self-start sm:self-auto">
+                  <button
+                    onClick={() => setOrderViewMode("grouped")}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
+                      orderViewMode === "grouped"
+                        ? "bg-[#faf9f5] text-[#0f110f] shadow-sm"
+                        : "text-[#9a978f] hover:text-[#faf9f5]"
+                    }`}
+                  >
+                    <FaUserGroup className="text-xs" />
+                    <span>Grouped ({customerGroupsList.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setOrderViewMode("list")}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
+                      orderViewMode === "list"
+                        ? "bg-[#faf9f5] text-[#0f110f] shadow-sm"
+                        : "text-[#9a978f] hover:text-[#faf9f5]"
+                    }`}
+                  >
+                    <FaListUl className="text-xs" />
+                    <span>Flat List ({filteredOrders.length})</span>
+                  </button>
+                </div>
               </div>
 
+              {/* Orders List / Empty State */}
               {filteredOrders.length === 0 ? (
-                <div className="text-center py-12 text-[#9A978F] text-xs space-y-3">
-                  <FaMobileScreen className="text-4xl mx-auto text-[#E5C158]" />
-                  <p>No orders found for the selected date filter. Select "All Pre-Order Dates" or place a new order on fitcat.in!</p>
+                <div className="text-center py-16 text-[#9a978f] text-xs space-y-3">
+                  <FaMobileScreen className="text-4xl mx-auto text-[#05c92f]" />
+                  <p className="max-w-md mx-auto">
+                    No pre-orders recorded for <strong>{activeDateLabel}</strong>. Switch to "Tomorrow", "Today", or "All Pre-Orders" to view other dates!
+                  </p>
                 </div>
               ) : orderViewMode === "grouped" ? (
                 /* GROUPED BY CUSTOMER VIEW */
                 <div className="space-y-4">
-                  {customerGroupsList.map((group, groupIdx) => {
-                    const isCollapsed = expandedCustomers[group.customerName] === true; // expanded by default unless true in collapsed state
-                    return (
-                      <div
-                        key={groupIdx}
-                        className="bg-[#0a140c] rounded-[.75rem] border border-[#263629] overflow-hidden shadow-sm transition"
-                      >
-                        {/* Customer Group Banner */}
-                        <div
-                          onClick={() => toggleCustomerExpand(group.customerName)}
-                          className="bg-[#162118] p-4 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-[#1f2d22] transition border-b border-[#263629]"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#0e2413] border border-[#05c92f]/40 flex items-center justify-center text-[#05c92f] font-black text-sm">
-                              {group.customerName.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-extrabold text-base text-[#FAF9F5]">{group.customerName}</h4>
-                                <span className="bg-[#E5C158] text-[#0f110f] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                  {group.ordersList.length} {group.ordersList.length === 1 ? "Order" : "Orders"}
-                                </span>
-                              </div>
-                              {group.customerPhone && (
-                                <a
-                                  href={`tel:${group.customerPhone}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-xs text-[#E5C158] hover:underline font-bold inline-flex items-center gap-1 mt-0.5"
-                                >
-                                  <FaPhone className="text-[10px]" />
-                                  <span>{group.customerPhone}</span>
-                                </a>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <span className="text-xs text-[#9A978F] block">Total Spent</span>
-                              <span className="text-base font-extrabold text-[#E5C158]">₹{group.totalSpent}</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-xs text-[#9A978F] block">Items Pre-Ordered</span>
-                              <span className="text-base font-extrabold text-[#FAF9F5]">{group.totalItemsCount} items</span>
-                            </div>
-                            <button className="text-[#E5C158] p-2 hover:bg-[#263629] rounded-full transition">
-                              {isCollapsed ? <FaChevronDown className="w-4 h-4" /> : <FaChevronUp className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Sub-Orders List for this customer */}
-                        {!isCollapsed && (
-                          <div className="p-4 space-y-3 bg-[#0a140c]">
-                            {group.ordersList.map((order) => (
-                              <div
-                                key={order.id}
-                                className="bg-[#162118] p-4 rounded-xl border border-[#263629] flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-                              >
-                                <div className="space-y-1.5 flex-1">
-                                  <div className="flex flex-wrap items-center gap-3 text-xs text-[#E5C158]">
-                                    <span className="inline-flex items-center gap-1 font-bold bg-[#0a140c] px-2.5 py-1 rounded-full border border-[#263629]">
-                                      <FaCalendarDays className="text-[10px] text-[#05c92f]" />
-                                      <span>Pickup Date: <strong>{formatBookingDateText(order.bookingDate)}</strong></span>
-                                    </span>
-                                    <span className="inline-flex items-center gap-1 font-bold bg-[#0a140c] px-2.5 py-1 rounded-full border border-[#263629]">
-                                      <FaClock className="text-[10px] text-[#05c92f]" />
-                                      <span>Time Slot: <strong>{order.timeSlot}</strong></span>
-                                    </span>
-                                    <span className="text-[11px] text-[#9A978F] ml-auto">Placed: {order.formattedTime}</span>
-                                  </div>
-
-                                  {/* Order Items list */}
-                                  <div className="pt-2">
-                                    <p className="text-xs font-bold text-[#9A978F] mb-1">Pre-Ordered Items:</p>
-                                    <div className="flex flex-wrap gap-2">
-                                      {order.items?.map((item, idx) => (
-                                        <span key={idx} className="bg-[#0a140c] px-3 py-1 rounded-full text-xs border border-[#263629] font-medium text-[#FAF9F5]">
-                                          {item.name} × <strong className="text-[#05c92f]">{item.qty}</strong> (<span className="text-[#E5C158]">₹{item.price * item.qty}</span>)
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  {order.notes && (
-                                    <p className="text-xs text-[#9A978F] italic pt-1 flex items-center gap-1.5">
-                                      <FaNoteSticky className="text-xs text-[#E5C158] shrink-0" />
-                                      <span>Note: {order.notes}</span>
-                                    </p>
-                                  )}
-                                </div>
-
-                                {/* Status & Controls */}
-                                <div className="flex flex-col items-end gap-2 w-full md:w-auto border-t md:border-t-0 border-[#263629] pt-3 md:pt-0">
-                                  <span className="text-xl font-extrabold text-[#E5C158]">₹{order.totalAmount}</span>
-
-                                  <div className="flex items-center gap-2">
-                                    <select
-                                      value={order.status || "Pending"}
-                                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                                      className={`text-xs font-bold px-3 py-1.5 rounded-full border focus:outline-none cursor-pointer ${
-                                        order.status === "Completed"
-                                          ? "bg-green-600 text-white border-green-400"
-                                          : order.status === "Confirmed"
-                                          ? "bg-blue-600 text-white border-blue-400"
-                                          : order.status === "Cancelled"
-                                          ? "bg-red-600 text-white border-red-400"
-                                          : "bg-yellow-500 text-[#0f110f] border-yellow-400"
-                                      }`}
-                                    >
-                                      <option value="Pending">● Pending</option>
-                                      <option value="Confirmed">● Confirmed</option>
-                                      <option value="Completed">● Completed</option>
-                                      <option value="Cancelled">● Cancelled</option>
-                                    </select>
-
-                                    <button
-                                      onClick={() => setDeletingOrderId(order.id)}
-                                      className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-red-500/40 transition flex items-center gap-1"
-                                      title="Delete Order"
-                                    >
-                                      <FaTrashCan className="w-3 h-3" />
-                                      <span>Delete</span>
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {customerGroupsList.map((group, groupIdx) => (
+                    <AdminCustomerGroupCard
+                      key={groupIdx}
+                      group={group}
+                      isExpanded={expandedCustomers[group.customerName] !== true} // expanded by default
+                      onToggleExpand={() => toggleCustomerExpand(group.customerName)}
+                      onStatusChange={handleStatusChange}
+                      onDeleteOrder={(orderId) => setDeletingOrderId(orderId)}
+                    />
+                  ))}
                 </div>
               ) : (
                 /* FLAT ORDERS LIST VIEW */
@@ -682,80 +546,91 @@ export default function AdminDashboardPage() {
                   {filteredOrders.map((order) => (
                     <div
                       key={order.id}
-                      className="bg-[#0a140c] p-5 rounded-[.75rem] border border-[#263629] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm"
+                      className="bg-[#0a0c0a] p-5 rounded-xl border border-[#262a26] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm transition-all duration-200 hover:border-[#363b36]"
                     >
-                      <div className="space-y-1.5 flex-1">
+                      <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center gap-3">
-                          <h4 className="font-bold text-base text-[#FAF9F5]">{order.customerName}</h4>
+                          <h4 className="font-semibold text-base text-[#faf9f5]">
+                            {order.customerName}
+                          </h4>
                           {order.customerPhone && (
-                            <a href={`tel:${order.customerPhone}`} className="text-xs text-[#E5C158] hover:underline font-bold inline-flex items-center gap-1">
+                            <a
+                              href={`tel:${order.customerPhone}`}
+                              className="text-xs text-[#05c92f] hover:underline font-semibold inline-flex items-center gap-1"
+                            >
                               <FaPhone className="text-[10px]" />
                               <span>{order.customerPhone}</span>
                             </a>
                           )}
-                          <span className="text-[11px] text-[#9A978F]">{order.formattedTime}</span>
+                          <span className="text-[11px] text-[#9a978f]">{order.formattedTime}</span>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-[#E5C158]">
-                          <span className="inline-flex items-center gap-1 font-bold">
+                        <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#faf9f5]">
+                          <span className="inline-flex items-center gap-1.5 font-semibold bg-[#171a17] px-3 py-1 rounded-full border border-[#262a26]">
                             <FaCalendarDays className="text-[10px] text-[#05c92f]" />
-                            <span>Date: <strong>{formatBookingDateText(order.bookingDate)}</strong></span>
+                            <span>Pickup Date: <strong className="text-[#05c92f]">{formatBookingDateText(order.bookingDate)}</strong></span>
                           </span>
-                          <span>•</span>
-                          <span className="inline-flex items-center gap-1 font-bold">
+                          <span className="inline-flex items-center gap-1.5 font-semibold bg-[#171a17] px-3 py-1 rounded-full border border-[#262a26]">
                             <FaClock className="text-[10px] text-[#05c92f]" />
-                            <span>Time: <strong>{order.timeSlot}</strong></span>
+                            <span>Time Slot: <strong className="text-[#faf9f5]">{order.timeSlot}</strong></span>
                           </span>
                         </div>
 
-                        {/* Order Items list */}
-                        <div className="pt-2">
-                          <p className="text-xs font-bold text-[#9A978F] mb-1">Items Ordered:</p>
+                        {/* Order Items */}
+                        <div className="pt-1">
+                          <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-[#9a978f] mb-1">
+                            Items Pre-Ordered:
+                          </p>
                           <div className="flex flex-wrap gap-2">
                             {order.items?.map((item, idx) => (
-                              <span key={idx} className="bg-[#162118] px-2.5 py-1 rounded-full text-xs border border-[#263629] font-medium text-[#FAF9F5]">
-                                {item.name} × <strong>{item.qty}</strong> (<span className="text-[#E5C158]">₹{item.price * item.qty}</span>)
+                              <span
+                                key={idx}
+                                className="bg-[#171a17] px-3 py-1 rounded-full text-xs border border-[#262a26] font-medium text-[#faf9f5]"
+                              >
+                                {item.name} × <strong className="text-[#05c92f]">{item.qty}</strong> (
+                                <span className="text-[#9a978f]">₹{item.price * item.qty}</span>)
                               </span>
                             ))}
                           </div>
                         </div>
 
                         {order.notes && (
-                          <p className="text-xs text-[#9A978F] italic pt-1 flex items-center gap-1.5">
-                            <FaNoteSticky className="text-xs text-[#E5C158] shrink-0" />
+                          <p className="text-xs text-[#9a978f] italic pt-1 flex items-center gap-1.5">
+                            <FaNoteSticky className="text-xs text-[#05c92f] shrink-0" />
                             <span>Note: {order.notes}</span>
                           </p>
                         )}
                       </div>
 
-                      {/* Status & Controls */}
-                      <div className="flex flex-col items-end gap-2 w-full md:w-auto border-t md:border-t-0 border-[#263629] pt-3 md:pt-0">
-                        <span className="text-2xl font-extrabold text-[#E5C158]">₹{order.totalAmount}</span>
+                      <div className="flex flex-col items-end gap-2 w-full md:w-auto border-t md:border-t-0 border-[#262a26] pt-3 md:pt-0 shrink-0">
+                        <span className="text-xl font-semibold text-[#05c92f] tabular-nums">
+                          ₹{order.totalAmount}
+                        </span>
 
                         <div className="flex items-center gap-2">
                           <select
                             value={order.status || "Pending"}
                             onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                            className={`text-xs font-bold px-3 py-1.5 rounded-full border focus:outline-none cursor-pointer ${
+                            className={`text-xs font-semibold px-3 py-1.5 rounded-full border focus:outline-none cursor-pointer ${
                               order.status === "Completed"
-                                ? "bg-green-600 text-white border-green-400"
+                                ? "bg-green-600/20 text-green-300 border-green-500/40"
                                 : order.status === "Confirmed"
-                                ? "bg-blue-600 text-white border-blue-400"
+                                ? "bg-blue-600/20 text-blue-300 border-blue-500/40"
                                 : order.status === "Cancelled"
-                                ? "bg-red-600 text-white border-red-400"
-                                : "bg-yellow-500 text-[#0f110f] border-yellow-400"
+                                ? "bg-red-600/20 text-red-300 border-red-500/40"
+                                : "bg-yellow-500/20 text-yellow-300 border-yellow-500/40"
                             }`}
                           >
-                            <option value="Pending">● Pending</option>
-                            <option value="Confirmed">● Confirmed</option>
-                            <option value="Completed">● Completed</option>
-                            <option value="Cancelled">● Cancelled</option>
+                            <option value="Pending" className="bg-[#171a17] text-[#faf9f5]">● Pending</option>
+                            <option value="Confirmed" className="bg-[#171a17] text-[#faf9f5]">● Confirmed</option>
+                            <option value="Completed" className="bg-[#171a17] text-[#faf9f5]">● Completed</option>
+                            <option value="Cancelled" className="bg-[#171a17] text-[#faf9f5]">● Cancelled</option>
                           </select>
 
                           <button
                             onClick={() => setDeletingOrderId(order.id)}
-                            className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-red-500/40 transition flex items-center gap-1"
-                            title="Delete Order"
+                            className="bg-red-600/15 hover:bg-red-600 hover:text-white text-red-300 text-xs font-semibold px-3 py-1.5 rounded-full border border-red-500/30 transition flex items-center gap-1"
+                            title="Delete Order Log"
                           >
                             <FaTrashCan className="w-3 h-3" />
                             <span>Delete</span>
@@ -770,20 +645,25 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 2: FOOD MENU & PRICING MANAGER WITH ITEM RANKING */}
+        {/* TAB 2: FOOD MENU & PRICE MANAGER WITH DISPLAY RANKING */}
         {activeTab === "menu" && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#162118] p-6 rounded-[.75rem] border border-[#263629] shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#171a17] p-6 rounded-xl border border-[#262a26] shadow-sm">
               <div>
-                <h1 className="text-xl font-bold text-[#E5C158]">Menu & Price Manager</h1>
-                <p className="text-xs text-[#9A978F] mt-0.5">
-                  Set custom display ranking (#1, #2, #3...), upload multiple photos per item, and adjust food prices live!
+                <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[#9a978f] block">
+                  MENU MANAGEMENT
+                </span>
+                <h1 className="text-lg font-semibold text-[#faf9f5] mt-0.5">
+                  Food Menu & Pricing Manager
+                </h1>
+                <p className="text-xs text-[#9a978f] mt-1">
+                  Adjust display ranking (#1, #2...), upload multiple photos, and update prices live on fitcat.in!
                 </p>
               </div>
 
               <button
                 onClick={handleAddNewMenuItem}
-                className="bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-bold px-5 py-2.5 rounded-full shadow-sm text-xs flex items-center gap-2 transition active:scale-95"
+                className="bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-semibold px-5 py-2.5 rounded-full shadow-sm text-xs flex items-center gap-2 transition-all duration-200"
               >
                 <FaPlus className="text-xs" />
                 <span>Add New Menu Item</span>
@@ -794,34 +674,40 @@ export default function AdminDashboardPage() {
               {menuItems.map((item, idx) => (
                 <div
                   key={item.id}
-                  className={`bg-[#162118] p-5 rounded-[.75rem] border ${
-                    item.inStock ? "border-[#263629] hover:border-[#3d5441]" : "border-red-500/40 opacity-75"
-                  } shadow-sm flex flex-col justify-between space-y-4 overflow-hidden`}
+                  className={`bg-[#171a17] p-5 rounded-xl border ${
+                    item.inStock ? "border-[#262a26] hover:border-[#363b36]" : "border-red-500/30 opacity-75"
+                  } shadow-sm flex flex-col justify-between space-y-4 transition-all duration-200 hover:-translate-y-1`}
                 >
                   <div>
-                    {/* Optional Image Thumbnail Preview */}
                     {item.image && item.image.trim() !== "" && (
-                      <div className="w-full h-40 rounded-[.5rem] overflow-hidden mb-3 border border-[#263629] bg-[#0a140c] flex items-center justify-center p-1">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                      <div className="w-full h-40 rounded-lg overflow-hidden mb-3 border border-[#262a26] bg-[#0a0c0a] flex items-center justify-center p-1">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                          }}
+                        />
                       </div>
                     )}
 
                     <div className="flex justify-between items-start mb-2 gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-xs font-bold text-[#E5C158] bg-[#0e2413] px-2.5 py-1 rounded-full border border-[#1b4224]">
+                        <span className="text-xs font-semibold text-[#05c92f] bg-[#0e2413] px-2.5 py-1 rounded-full border border-[#1b4224]">
                           {item.category || "General"}
                         </span>
-                        <span className="text-xs font-bold text-[#FAF9F5] bg-[#0a140c] px-2.5 py-1 rounded-full border border-[#263629]">
+                        <span className="text-xs font-semibold text-[#faf9f5] bg-[#0a0c0a] px-2.5 py-1 rounded-full border border-[#262a26]">
                           Rank #{item.displayOrder || idx + 1}
                         </span>
                       </div>
 
                       <button
                         onClick={() => saveMenuItemToFirestore({ ...item, inStock: !item.inStock })}
-                        className={`text-xs font-bold px-3 py-1 rounded-full transition flex items-center gap-1.5 ${
+                        className={`text-xs font-semibold px-3 py-1 rounded-full transition flex items-center gap-1.5 ${
                           item.inStock
-                            ? "bg-green-500/20 text-green-300 border border-green-500/40"
-                            : "bg-red-500/20 text-red-300 border border-red-500/40"
+                            ? "bg-green-600/20 text-green-300 border border-green-500/30"
+                            : "bg-red-600/20 text-red-300 border border-red-500/30"
                         }`}
                       >
                         <span className={`w-2 h-2 rounded-full ${item.inStock ? "bg-green-400" : "bg-red-400"}`}></span>
@@ -829,15 +715,16 @@ export default function AdminDashboardPage() {
                       </button>
                     </div>
 
-                    {/* Golden Yellow Product Name */}
-                    <h3 className="text-base font-bold text-[#E5C158] mb-1 tracking-[-.02em]">{item.name}</h3>
-                    <p className="text-xs text-[#9A978F] line-clamp-2">{item.description}</p>
+                    <h3 className="text-base font-semibold text-[#faf9f5] mb-1 tracking-[-0.02em]">
+                      {item.name}
+                    </h3>
+                    <p className="text-xs text-[#9a978f] line-clamp-2">{item.description}</p>
                   </div>
 
-                  <div className="space-y-3 pt-3 border-t border-[#263629]">
+                  <div className="space-y-3 pt-3 border-t border-[#262a26]">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-[#9A978F]">Price (₹)</label>
-                      <span className="text-lg font-extrabold text-[#E5C158] bg-[#0a140c] px-3 py-0.5 rounded-full border border-[#263629] tabular-nums">
+                      <label className="text-xs font-semibold text-[#9a978f]">Price (₹)</label>
+                      <span className="text-base font-semibold text-[#05c92f] bg-[#0a0c0a] px-3 py-0.5 rounded-full border border-[#262a26] tabular-nums">
                         ₹{item.price}
                       </span>
                     </div>
@@ -845,9 +732,12 @@ export default function AdminDashboardPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => {
-                          const images = Array.isArray(item.images) && item.images.length > 0
-                            ? item.images
-                            : (item.image && item.image.trim() !== "" ? [item.image.trim()] : []);
+                          const images =
+                            Array.isArray(item.images) && item.images.length > 0
+                              ? item.images
+                              : item.image && item.image.trim() !== ""
+                              ? [item.image.trim()]
+                              : [];
                           setEditingItem({
                             ...item,
                             image: item.image || "",
@@ -855,14 +745,14 @@ export default function AdminDashboardPage() {
                             displayOrder: item.displayOrder || idx + 1,
                           });
                         }}
-                        className="flex-1 bg-[#0a140c] hover:bg-[#263629] text-[#FAF9F5] hover:text-[#E5C158] font-bold py-2 rounded-full border border-[#263629] text-xs transition flex items-center justify-center gap-1.5"
+                        className="flex-1 bg-[#0a0c0a] hover:bg-[#faf9f5] text-[#faf9f5] hover:text-[#0f110f] font-semibold py-2 rounded-full border border-[#262a26] text-xs transition-all duration-200 flex items-center justify-center gap-1.5"
                       >
-                        <FaPenToSquare className="text-xs text-[#E5C158]" />
+                        <FaPenToSquare className="text-xs" />
                         <span>Edit Rank & Photos</span>
                       </button>
                       <button
                         onClick={() => setDeletingMenuItemId(item.id)}
-                        className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-full border border-red-500/40 text-xs font-bold transition flex items-center justify-center"
+                        className="bg-red-600/15 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-full border border-red-500/30 text-xs font-semibold transition flex items-center justify-center"
                         title="Delete Menu Item"
                       >
                         <FaTrashCan className="text-xs" />
@@ -875,20 +765,25 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 3: PROMOTIONAL BANNERS MANAGER */}
+        {/* TAB 3: PROMOTIONAL BANNERS CAROUSEL MANAGER */}
         {activeTab === "banners" && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#162118] p-6 rounded-[.75rem] border border-[#263629] shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#171a17] p-6 rounded-xl border border-[#262a26] shadow-sm">
               <div>
-                <h1 className="text-xl font-bold text-[#E5C158]">Promotional Banners Manager</h1>
-                <p className="text-xs text-[#9A978F] mt-0.5">
-                  Upload multiple scrollable banner posters displayed right above the FITCAT MENU on mobile and desktop!
+                <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[#9a978f] block">
+                  PROMOTIONAL BANNERS
+                </span>
+                <h1 className="text-lg font-semibold text-[#faf9f5] mt-0.5">
+                  Promotional Banner Carousel
+                </h1>
+                <p className="text-xs text-[#9a978f] mt-1">
+                  Upload scrollable banner posters displayed right above the FITCAT Menu on mobile & desktop!
                 </p>
               </div>
 
               <button
                 onClick={handleAddNewBanner}
-                className="bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-bold px-5 py-2.5 rounded-full shadow-sm text-xs flex items-center gap-2 transition active:scale-95"
+                className="bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-semibold px-5 py-2.5 rounded-full shadow-sm text-xs flex items-center gap-2 transition-all duration-200"
               >
                 <FaPlus className="text-xs" />
                 <span>Upload New Banner</span>
@@ -899,32 +794,34 @@ export default function AdminDashboardPage() {
               {banners.map((banner, idx) => (
                 <div
                   key={banner.id}
-                  className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] hover:border-[#3d5441] shadow-sm flex flex-col justify-between space-y-4 overflow-hidden"
+                  className="bg-[#171a17] p-5 rounded-xl border border-[#262a26] hover:border-[#363b36] shadow-sm flex flex-col justify-between space-y-4 overflow-hidden transition-all duration-200 hover:-translate-y-1"
                 >
                   <div>
                     {banner.image && (
-                      <div className="w-full h-44 rounded-[.5rem] overflow-hidden mb-3 border border-[#263629] bg-[#0a140c] flex items-center justify-center p-1">
+                      <div className="w-full h-44 rounded-lg overflow-hidden mb-3 border border-[#262a26] bg-[#0a0c0a] flex items-center justify-center p-1">
                         <img src={banner.image} alt={banner.title} className="w-full h-full object-contain" />
                       </div>
                     )}
-                    <span className="text-xs font-bold text-[#E5C158] bg-[#0e2413] px-2.5 py-0.5 rounded-full border border-[#1b4224] inline-block mb-2">
+                    <span className="text-xs font-semibold text-[#05c92f] bg-[#0e2413] px-2.5 py-0.5 rounded-full border border-[#1b4224] inline-block mb-2">
                       Banner #{banner.order || idx + 1}
                     </span>
-                    <h3 className="text-base font-bold text-[#FAF9F5] mb-1">{banner.title || "Promotional Banner"}</h3>
-                    <p className="text-xs text-[#9A978F]">{banner.subtitle}</p>
+                    <h3 className="text-base font-semibold text-[#faf9f5] mb-1">
+                      {banner.title || "Promotional Banner"}
+                    </h3>
+                    <p className="text-xs text-[#9a978f]">{banner.subtitle}</p>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-3 border-t border-[#263629]">
+                  <div className="flex items-center gap-2 pt-3 border-t border-[#262a26]">
                     <button
                       onClick={() => setEditingBanner(banner)}
-                      className="flex-1 bg-[#0a140c] hover:bg-[#263629] text-[#FAF9F5] hover:text-[#E5C158] font-bold py-2 rounded-full border border-[#263629] text-xs transition flex items-center justify-center gap-1.5"
+                      className="flex-1 bg-[#0a0c0a] hover:bg-[#faf9f5] text-[#faf9f5] hover:text-[#0f110f] font-semibold py-2 rounded-full border border-[#262a26] text-xs transition-all duration-200 flex items-center justify-center gap-1.5"
                     >
-                      <FaPenToSquare className="text-xs text-[#E5C158]" />
+                      <FaPenToSquare className="text-xs" />
                       <span>Edit Banner</span>
                     </button>
                     <button
                       onClick={() => setDeletingBannerId(banner.id)}
-                      className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-full border border-red-500/40 text-xs font-bold transition flex items-center justify-center"
+                      className="bg-red-600/15 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-full border border-red-500/30 text-xs font-semibold transition flex items-center justify-center"
                       title="Delete Banner"
                     >
                       <FaTrashCan className="text-xs" />
@@ -939,84 +836,87 @@ export default function AdminDashboardPage() {
 
       {/* EDIT MENU ITEM MODAL */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-lg w-full text-[#FAF9F5] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#263629] pb-3">
-              <h3 className="text-lg font-bold text-[#E5C158]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#171a17] border border-[#262a26] rounded-xl p-6 max-w-lg w-full text-[#faf9f5] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#262a26] pb-3">
+              <h3 className="text-base font-semibold text-[#faf9f5]">
                 {editingItem.name ? `Edit "${editingItem.name}"` : "Add New Menu Item"}
               </h3>
-              <button onClick={() => setEditingItem(null)} className="text-[#9A978F] hover:text-[#FAF9F5] p-1.5 rounded-full hover:bg-[#263629] transition">
+              <button
+                onClick={() => setEditingItem(null)}
+                className="text-[#9a978f] hover:text-[#faf9f5] p-1.5 rounded-full hover:bg-[#262a26] transition"
+              >
                 <FaXmark className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveMenuItem} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-[#E5C158] mb-1">Item Title</label>
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Item Title</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Peanut Butter Banana Sandwich"
                   value={editingItem.name}
                   onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
-                  className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-sm text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#E5C158] mb-1">Price (₹)</label>
+                  <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Price (₹)</label>
                   <input
                     type="number"
                     required
                     value={editingItem.price}
                     onChange={(e) => setEditingItem({ ...editingItem, price: Number(e.target.value) })}
-                    className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                    className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-sm text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#E5C158] mb-1">Display Rank (#)</label>
+                  <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Display Rank (#)</label>
                   <input
                     type="number"
                     required
                     min={1}
                     value={editingItem.displayOrder || 1}
                     onChange={(e) => setEditingItem({ ...editingItem, displayOrder: Number(e.target.value) })}
-                    className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                    className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-sm text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#E5C158] mb-1">Category</label>
+                  <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Category</label>
                   <input
                     type="text"
                     placeholder="Bowl, Sandwich..."
                     value={editingItem.category}
                     onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                    className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                    className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-sm text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#E5C158] mb-1">Highlight Badge</label>
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Highlight Badge</label>
                 <input
                   type="text"
                   placeholder="Sugar Free, Energy Boost..."
                   value={editingItem.badge || ""}
                   onChange={(e) => setEditingItem({ ...editingItem, badge: e.target.value })}
-                  className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-xs text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-xs text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
                 />
               </div>
 
-              {/* Food Images (Multiple Images Support) */}
+              {/* Food Photos Upload (Multiple Images Support) */}
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-xs font-bold text-[#E5C158]">Food Images (Add Multiple)</label>
+                  <label className="block text-xs font-semibold text-[#faf9f5]">Food Photos</label>
                   {(editingItem.image || (editingItem.images && editingItem.images.length > 0)) && (
                     <button
                       type="button"
                       onClick={() => setEditingItem({ ...editingItem, image: "", images: [] })}
-                      className="text-[11px] text-red-400 hover:underline font-bold"
+                      className="text-[11px] text-red-400 hover:underline font-semibold"
                     >
                       Clear All Images
                     </button>
@@ -1024,44 +924,46 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block">
-                    <span className="text-[11px] text-[#9A978F] font-medium block mb-1">Upload Photos (Shown at Full Resolution without cutting):</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={async (e) => {
-                        const files = Array.from(e.target.files || []);
-                        if (files.length > 0) {
-                          try {
-                            const newCompressed = await Promise.all(
-                              files.map((file) => compressAndResizeImage(file))
-                            );
-                            setEditingItem((prev) => {
-                              const existingList = Array.isArray(prev.images) && prev.images.length > 0
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) {
+                        try {
+                          const newCompressed = await Promise.all(
+                            files.map((file) => compressAndResizeImage(file))
+                          );
+                          setEditingItem((prev) => {
+                            const existingList =
+                              Array.isArray(prev.images) && prev.images.length > 0
                                 ? prev.images
-                                : (prev.image ? [prev.image] : []);
-                              const updatedList = [...existingList, ...newCompressed];
-                              return {
-                                ...prev,
-                                image: updatedList[0] || "",
-                                images: updatedList,
-                              };
-                            });
-                          } catch (err) {
-                            console.error("Compression error:", err);
-                          }
+                                : prev.image
+                                ? [prev.image]
+                                : [];
+                            const updatedList = [...existingList, ...newCompressed];
+                            return {
+                              ...prev,
+                              image: updatedList[0] || "",
+                              images: updatedList,
+                            };
+                          });
+                        } catch (err) {
+                          console.error("Compression error:", err);
                         }
-                      }}
-                      className="w-full text-xs text-[#9A978F] file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#05c92f] file:text-[#0f110f] hover:file:bg-[#3ade5c] cursor-pointer bg-[#0a140c] border border-[#263629] rounded-lg p-1"
-                    />
-                  </label>
+                      }
+                    }}
+                    className="w-full text-xs text-[#9a978f] file:mr-3 file:py-1.5 file:px-3.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#05c92f] file:text-[#0f110f] hover:file:bg-[#3ade5c] cursor-pointer bg-[#0a0c0a] border border-[#262a26] rounded-lg p-1.5"
+                  />
 
-                  {/* Thumbnail Previews */}
                   {editingItem.images && editingItem.images.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-2 border-t border-[#263629]">
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-[#262a26]">
                       {editingItem.images.map((imgUrl, imgIdx) => (
-                        <div key={imgIdx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#263629] bg-[#0a140c] p-0.5">
+                        <div
+                          key={imgIdx}
+                          className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#262a26] bg-[#0a0c0a] p-0.5"
+                        >
                           <img src={imgUrl} alt="preview" className="w-full h-full object-contain" />
                           <button
                             type="button"
@@ -1091,27 +993,29 @@ export default function AdminDashboardPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#E5C158] mb-1">Item Description</label>
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">
+                  Item Description
+                </label>
                 <textarea
                   rows={3}
                   placeholder="Describe ingredients, taste, fiber..."
                   value={editingItem.description}
                   onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                  className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-xs text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-xs text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-[#263629] flex justify-end gap-3">
+              <div className="pt-3 border-t border-[#262a26] flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setEditingItem(null)}
-                  className="px-4 py-2 rounded-full border border-[#263629] text-xs font-bold text-[#9A978F] hover:text-[#FAF9F5]"
+                  className="px-4 py-2 rounded-full border border-[#262a26] text-xs font-semibold text-[#9a978f] hover:text-[#faf9f5]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-full bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] text-xs font-bold shadow transition"
+                  className="px-5 py-2 rounded-full bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] text-xs font-semibold shadow transition"
                 >
                   Save Item & Publish
                 </button>
@@ -1121,56 +1025,59 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* EDIT PROMOTIONAL BANNER MODAL */}
+      {/* EDIT BANNER MODAL */}
       {editingBanner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-md w-full text-[#FAF9F5] shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#263629] pb-3">
-              <h3 className="text-lg font-bold text-[#E5C158]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#171a17] border border-[#262a26] rounded-xl p-6 max-w-md w-full text-[#faf9f5] shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#262a26] pb-3">
+              <h3 className="text-base font-semibold text-[#faf9f5]">
                 {editingBanner.title ? `Edit Banner` : "Add New Banner"}
               </h3>
-              <button onClick={() => setEditingBanner(null)} className="text-[#9A978F] hover:text-[#FAF9F5] p-1.5 rounded-full hover:bg-[#263629] transition">
+              <button
+                onClick={() => setEditingBanner(null)}
+                className="text-[#9a978f] hover:text-[#faf9f5] p-1.5 rounded-full hover:bg-[#262a26] transition"
+              >
                 <FaXmark className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveBanner} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-[#E5C158] mb-1">Banner Title</label>
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Banner Title</label>
                 <input
                   type="text"
                   placeholder="e.g. Good Food • Good Mood"
                   value={editingBanner.title || ""}
                   onChange={(e) => setEditingBanner({ ...editingBanner, title: e.target.value })}
-                  className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-sm text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#E5C158] mb-1">Subtitle / Badge</label>
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Subtitle / Badge</label>
                 <input
                   type="text"
                   placeholder="e.g. Fitcat Daily Special"
                   value={editingBanner.subtitle || ""}
                   onChange={(e) => setEditingBanner({ ...editingBanner, subtitle: e.target.value })}
-                  className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-xs text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-xs text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#E5C158] mb-1">Banner Sequence Order (#)</label>
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Sequence Order (#)</label>
                 <input
                   type="number"
                   required
                   min={1}
                   value={editingBanner.order || 1}
                   onChange={(e) => setEditingBanner({ ...editingBanner, order: Number(e.target.value) })}
-                  className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-sm text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#E5C158] mb-1">Banner Poster Image</label>
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Banner Poster Image</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -1181,31 +1088,31 @@ export default function AdminDashboardPage() {
                         const compressed = await compressAndResizeImage(file, 1000, 0.8);
                         setEditingBanner((prev) => ({ ...prev, image: compressed }));
                       } catch (err) {
-                        console.error("Banner image compression error:", err);
+                        console.error("Banner compression error:", err);
                       }
                     }
                   }}
-                  className="w-full text-xs text-[#9A978F] file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#05c92f] file:text-[#0f110f] hover:file:bg-[#3ade5c] cursor-pointer bg-[#0a140c] border border-[#263629] rounded-lg p-1"
+                  className="w-full text-xs text-[#9a978f] file:mr-3 file:py-1.5 file:px-3.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#05c92f] file:text-[#0f110f] hover:file:bg-[#3ade5c] cursor-pointer bg-[#0a0c0a] border border-[#262a26] rounded-lg p-1.5"
                 />
               </div>
 
               {editingBanner.image && (
-                <div className="w-full h-36 rounded-lg overflow-hidden border border-[#263629] bg-[#0a140c] flex items-center justify-center p-1">
+                <div className="w-full h-36 rounded-lg overflow-hidden border border-[#262a26] bg-[#0a0c0a] flex items-center justify-center p-1">
                   <img src={editingBanner.image} alt="banner preview" className="w-full h-full object-contain" />
                 </div>
               )}
 
-              <div className="pt-3 border-t border-[#263629] flex justify-end gap-3">
+              <div className="pt-3 border-t border-[#262a26] flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setEditingBanner(null)}
-                  className="px-4 py-2 rounded-full border border-[#263629] text-xs font-bold text-[#9A978F] hover:text-[#FAF9F5]"
+                  className="px-4 py-2 rounded-full border border-[#262a26] text-xs font-semibold text-[#9a978f] hover:text-[#faf9f5]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-full bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] text-xs font-bold shadow transition"
+                  className="px-5 py-2 rounded-full bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] text-xs font-semibold shadow transition"
                 >
                   Save & Publish Banner
                 </button>
@@ -1217,20 +1124,22 @@ export default function AdminDashboardPage() {
 
       {/* DELETE CONFIRMATION MODALS */}
       {deletingOrderId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-[#E5C158]">Delete Order Log?</h3>
-            <p className="text-xs text-[#9A978F]">This will permanently delete this pre-order log from Firebase.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#171a17] border border-[#262a26] rounded-xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <h3 className="text-base font-semibold text-[#faf9f5]">Delete Pre-Order Log?</h3>
+            <p className="text-xs text-[#9a978f]">
+              This will permanently remove this pre-order log from Firestore.
+            </p>
             <div className="flex justify-center gap-3 pt-2">
               <button
                 onClick={() => setDeletingOrderId(null)}
-                className="px-4 py-2 rounded-full border border-[#263629] text-xs font-bold text-[#9A978F]"
+                className="px-4 py-2 rounded-full border border-[#262a26] text-xs font-semibold text-[#9a978f]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteOrder(deletingOrderId)}
-                className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow"
+                className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow"
               >
                 Delete Now
               </button>
@@ -1240,20 +1149,22 @@ export default function AdminDashboardPage() {
       )}
 
       {deletingMenuItemId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-[#E5C158]">Delete Menu Item?</h3>
-            <p className="text-xs text-[#9A978F]">This will permanently remove the item from fitcat.in!</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#171a17] border border-[#262a26] rounded-xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <h3 className="text-base font-semibold text-[#faf9f5]">Delete Menu Item?</h3>
+            <p className="text-xs text-[#9a978f]">
+              This will permanently remove the item from fitcat.in!
+            </p>
             <div className="flex justify-center gap-3 pt-2">
               <button
                 onClick={() => setDeletingMenuItemId(null)}
-                className="px-4 py-2 rounded-full border border-[#263629] text-xs font-bold text-[#9A978F]"
+                className="px-4 py-2 rounded-full border border-[#262a26] text-xs font-semibold text-[#9a978f]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteMenuItem(deletingMenuItemId)}
-                className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow"
+                className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow"
               >
                 Delete Now
               </button>
@@ -1263,20 +1174,22 @@ export default function AdminDashboardPage() {
       )}
 
       {deletingBannerId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-[#E5C158]">Delete Banner?</h3>
-            <p className="text-xs text-[#9A978F]">This will remove the banner from the promotional carousel.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#171a17] border border-[#262a26] rounded-xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <h3 className="text-base font-semibold text-[#faf9f5]">Delete Banner?</h3>
+            <p className="text-xs text-[#9a978f]">
+              This will remove the banner from the promotional carousel.
+            </p>
             <div className="flex justify-center gap-3 pt-2">
               <button
                 onClick={() => setDeletingBannerId(null)}
-                className="px-4 py-2 rounded-full border border-[#263629] text-xs font-bold text-[#9A978F]"
+                className="px-4 py-2 rounded-full border border-[#262a26] text-xs font-semibold text-[#9a978f]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteBanner(deletingBannerId)}
-                className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow"
+                className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-semibold shadow"
               >
                 Delete Now
               </button>
