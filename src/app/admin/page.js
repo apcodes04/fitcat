@@ -262,7 +262,11 @@ export default function AdminDashboardPage() {
     const res = await saveBannerToFirestore(editingBanner);
     if (res.success) {
       setEditingBanner(null);
-      setStatusMessage("Promotional banner saved & published live!");
+      setStatusMessage(
+        res.fallback
+          ? "Promotional banner saved locally!"
+          : "Promotional banner saved & published live!"
+      );
       setTimeout(() => setStatusMessage(""), 3000);
     } else {
       alert(`Failed to save banner image: ${res.error}`);
