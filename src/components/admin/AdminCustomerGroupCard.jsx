@@ -22,8 +22,12 @@ export default function AdminCustomerGroupCard({
             {group.customerName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h4 className="font-semibold text-base text-[#faf9f5] truncate">{group.customerName}</h4>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-extrabold text-[#05c92f] font-mono bg-[#0a0c0a] px-2.5 py-0.5 rounded-md border border-[#262a26] flex items-center gap-1.5 shadow-inner">
+                <FaPhone className="text-[10px] text-[#05c92f]" />
+                <span>{group.primaryKeyPhone || group.customerPhone || "No Phone"}</span>
+              </span>
+              <h4 className="font-semibold text-sm text-[#faf9f5] truncate">{group.customerName}</h4>
               <span className="bg-[#0e2413] text-[#05c92f] border border-[#1b4224] text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0">
                 {group.ordersList.length} {group.ordersList.length === 1 ? "Order" : "Orders"}
               </span>
@@ -32,10 +36,9 @@ export default function AdminCustomerGroupCard({
               <a
                 href={`tel:${group.customerPhone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="text-xs text-[#05c92f] hover:underline font-semibold inline-flex items-center gap-1.5 mt-0.5"
+                className="text-[11px] text-[#9a978f] hover:text-[#05c92f] hover:underline font-semibold inline-flex items-center gap-1.5 mt-1"
               >
-                <FaPhone className="text-[10px]" />
-                <span>{group.customerPhone}</span>
+                <span>Click to call customer</span>
               </a>
             )}
           </div>

@@ -48,12 +48,12 @@ export default function AdminDateFilterModule({
           </h3>
         </div>
 
-        {/* Current Active Date Badge */}
-        <div className="self-start sm:self-auto bg-[#0e2413] border border-[#1b4224] text-[#05c92f] px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#05c92f] animate-pulse"></span>
+        {/* Current Active Date Badge in Bold Purple */}
+        <div className="self-start sm:self-auto bg-purple-950/60 border border-purple-500/50 text-purple-300 px-3.5 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-2 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
           <span>
             Viewing:{" "}
-            <strong className="text-[#faf9f5]">
+            <strong className="text-purple-200 font-extrabold uppercase tracking-wide">
               {selectedDateFilter === "ALL"
                 ? "All Dates"
                 : selectedDateFilter === "TOMORROW"

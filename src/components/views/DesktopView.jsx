@@ -36,7 +36,7 @@ export default function DesktopView() {
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 bg-[#0a140c] px-2.5 py-0.5 rounded-full text-[#FAF9F5] border border-[#263629]">
             <span className="w-2 h-2 rounded-full bg-[#05c92f] animate-pulse"></span>
-            Store Timings: 6:30 AM to 9:30 AM Daily
+            Store Timings: 7:00 AM to 9:30 AM Daily
           </span>
           <span className="flex items-center gap-1.5"><FaLocationDot className="text-[#05c92f]" /> Vikhroli East Railway Station, Mumbai</span>
         </div>

@@ -54,7 +54,7 @@ export default function AboutPage() {
               </div>
               <div className="bg-[#0a140c] p-3 rounded-lg border border-[#263629]">
                 <span className="font-bold text-[#E5C158] block mb-0.5">⏰ Operational Timings</span>
-                <span className="text-xs font-bold text-[#05c92f]">6:30 AM to 9:30 AM</span>
+                <span className="text-xs font-bold text-[#05c92f]">7:00 AM to 9:30 AM</span>
               </div>
               <div className="bg-[#0a140c] p-3 rounded-lg border border-[#263629]">
                 <span className="font-bold text-[#E5C158] block mb-0.5">📱 Official Instagram</span>

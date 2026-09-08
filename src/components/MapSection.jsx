@@ -39,7 +39,7 @@ export default function MapSection() {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-fitcat-gold text-base">⏰</span>
-            <span className="bg-fitcat-gold/20 px-2 py-0.5 rounded text-fitcat-gold font-bold">6:30 AM – 9:30 AM Daily</span>
+            <span className="bg-fitcat-gold/20 px-2 py-0.5 rounded text-fitcat-gold font-bold">7:00 AM – 9:30 AM Daily</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-fitcat-gold text-base">📞</span>

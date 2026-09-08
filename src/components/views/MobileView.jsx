@@ -40,7 +40,7 @@ export default function MobileView() {
             {/* Timing in a SINGLE LINE */}
             <span className="whitespace-nowrap flex items-center gap-1.5 text-[#05c92f] font-bold text-[10px] sm:text-[11px] leading-tight">
               <span className="w-1.5 h-1.5 rounded-full bg-[#05c92f] animate-pulse flex-shrink-0"></span>
-              <span>6:30 AM to 9:30 AM</span>
+              <span>7:00 AM to 9:30 AM</span>
             </span>
 
             {/* Address in a SINGLE LINE */}

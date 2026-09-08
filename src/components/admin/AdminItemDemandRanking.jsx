@@ -22,7 +22,7 @@ export default function AdminItemDemandRanking({ rankedItemDemand = [], dateLabe
             <h3 className="text-base font-semibold text-[#faf9f5]">Item Demand Ranking</h3>
           </div>
         </div>
-        <span className="text-xs text-[#9a978f] font-semibold bg-[#0a0c0a] px-3 py-1 rounded-full border border-[#262a26]">
+        <span className="text-xs text-purple-300 font-extrabold bg-purple-950/60 px-3.5 py-1.5 rounded-full border border-purple-500/50 shadow-sm">
           {dateLabel}
         </span>
       </div>

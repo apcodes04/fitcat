@@ -336,13 +336,17 @@ export default function AdminDashboardPage() {
     .map(([itemName, totalQty]) => ({ itemName, totalQty }))
     .sort((a, b) => b.totalQty - a.totalQty);
 
-  // Group Filtered Orders by Customer Name
+  // Group Filtered Orders by Customer Mobile Number (Primary Key)
   const groupedOrdersMap = {};
   filteredOrders.forEach((order) => {
-    const key = (order.customerName || "Guest Customer").trim();
+    const rawPhone = (order.customerPhone || "").replace(/\D/g, "");
+    const primaryKeyPhone = rawPhone.length === 10 ? rawPhone : (order.customerPhone && order.customerPhone !== "Not provided" ? order.customerPhone : null);
+    const key = primaryKeyPhone || (order.customerName || "Customer").trim();
+
     if (!groupedOrdersMap[key]) {
       groupedOrdersMap[key] = {
-        customerName: key,
+        primaryKeyPhone: primaryKeyPhone || order.customerPhone || "Unregistered Mobile",
+        customerName: (order.customerName || "Customer").trim(),
         customerPhone: order.customerPhone || "",
         ordersList: [],
         totalSpent: 0,
@@ -354,8 +358,8 @@ export default function AdminDashboardPage() {
     const orderItemsCount =
       order.items?.reduce((sum, i) => sum + (Number(i.qty) || 1), 0) || 0;
     groupedOrdersMap[key].totalItemsCount += orderItemsCount;
-    if (!groupedOrdersMap[key].customerPhone && order.customerPhone) {
-      groupedOrdersMap[key].customerPhone = order.customerPhone;
+    if (!groupedOrdersMap[key].customerName && order.customerName) {
+      groupedOrdersMap[key].customerName = order.customerName;
     }
   });
 
@@ -433,7 +437,7 @@ export default function AdminDashboardPage() {
               }`}
             >
               <FaImage className="text-xs" />
-              <span>Banners Carousel ({banners.length})</span>
+              <span>MENU IMAGE UPDATES ({banners.length})</span>
             </button>
           </div>
         </div>

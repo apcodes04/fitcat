@@ -16,6 +16,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
   const [timeSlot, setTimeSlot] = useState("7:00 AM to 7:15 AM");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -25,6 +26,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
     if (!isOpen) {
       setIsSubmitting(false);
       setIsSubmitted(false);
+      setPhoneError("");
     }
     const unsubscribe = subscribeToMenuItems((liveItems) => {
       const inStockItems = liveItems.filter((item) => item.inStock !== false);
@@ -84,6 +86,14 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
   const handleWhatsAppSubmit = (e) => {
     e.preventDefault();
 
+    // Strict 10-digit Indian Mobile Number validation
+    const cleanPhone = customerPhone.replace(/\D/g, "");
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      setPhoneError("Please enter a valid 10-digit mobile number (e.g. 9876543210)");
+      return;
+    }
+    setPhoneError("");
+
     // Prevent duplicate submission / clicks
     if (isSubmitting || isSubmitted) return;
 
@@ -99,7 +109,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
 
     const orderPayload = {
       customerName: customerName || "Customer",
-      customerPhone: customerPhone || "Not provided",
+      customerPhone: cleanPhone,
       bookingDate: formattedDateText,
       timeSlot,
       items: orderItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
@@ -122,9 +132,9 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
       `🥗 *FITCAT PRE-BOOKING ORDER* 🥗\n` +
       `-----------------------------\n` +
       `👤 *Customer*: ${customerName || "Customer"}\n` +
-      (customerPhone ? `📞 *Phone*: ${customerPhone}\n` : "") +
+      `📞 *Phone*: ${cleanPhone}\n` +
       `📅 *Pre-Booking Date*: ${formattedDateText}\n` +
-      `⏰ *Pickup Time Slot*: ${timeSlot} (Store timings: 6:30 AM to 9:30 AM)\n` +
+      `⏰ *Pickup Time Slot*: ${timeSlot} (Store timings: 7:00 AM to 9:30 AM)\n` +
       `📍 *Location*: Vikhroli East Railway Station\n` +
       `-----------------------------\n` +
       `🛒 *ORDER ITEMS*:\n${orderSummary}\n` +
@@ -155,7 +165,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
               <span>Pre-Book Food via WhatsApp</span>
             </h3>
             <p className="text-xs text-[#9A978F] mt-0.5">
-              Store Pickup: <strong>6:30 AM to 9:30 AM</strong> • Pre-orders received till <strong>11:00 PM</strong>
+              Store Pickup: <strong>7:00 AM to 9:30 AM</strong> • Pre-orders received till <strong>11:00 PM</strong>
             </p>
           </div>
           <button
@@ -188,14 +198,26 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#E5C158] mb-1">Phone Number (Optional)</label>
+              <label className="block text-xs font-bold text-[#E5C158] mb-1">
+                Mobile Number <span className="text-red-400">* (10 Digits)</span>
+              </label>
               <input
                 type="tel"
-                placeholder="+91 9876543210"
+                required
+                maxLength={14}
+                placeholder="e.g. 9876543210"
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                onChange={(e) => {
+                  setCustomerPhone(e.target.value);
+                  if (phoneError) setPhoneError("");
+                }}
+                className={`w-full bg-[#0a140c] border ${
+                  phoneError ? "border-red-500" : "border-[#263629]"
+                } rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]`}
               />
+              {phoneError && (
+                <p className="text-[11px] font-bold text-red-400 mt-1">{phoneError}</p>
+              )}
             </div>
           </div>
 
@@ -221,9 +243,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
                 onChange={(e) => setTimeSlot(e.target.value)}
                 className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
               >
-                <option value="6:30 AM to 6:45 AM">6:30 AM to 6:45 AM (Opening)</option>
-                <option value="6:45 AM to 7:00 AM">6:45 AM to 7:00 AM</option>
-                <option value="7:00 AM to 7:15 AM">7:00 AM to 7:15 AM</option>
+                <option value="7:00 AM to 7:15 AM">7:00 AM to 7:15 AM (Store Opening)</option>
                 <option value="7:15 AM to 7:30 AM">7:15 AM to 7:30 AM</option>
                 <option value="7:30 AM to 7:45 AM">7:30 AM to 7:45 AM</option>
                 <option value="7:45 AM to 8:00 AM">7:45 AM to 8:00 AM</option>
