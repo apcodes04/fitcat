@@ -277,10 +277,14 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteBanner = async (bannerId) => {
-    await deleteBannerFromFirestore(bannerId);
-    setDeletingBannerId(null);
-    setStatusMessage("Promotional banner removed.");
-    setTimeout(() => setStatusMessage(""), 3000);
+    const res = await deleteBannerFromFirestore(bannerId);
+    if (res.success) {
+      setDeletingBannerId(null);
+      setStatusMessage("Menu card image permanently deleted from Cloud Firestore!");
+      setTimeout(() => setStatusMessage(""), 3000);
+    } else {
+      alert(`Failed to delete menu card image from Cloud Firestore: ${res.error}`);
+    }
   };
 
   const handleAddNewBanner = () => {

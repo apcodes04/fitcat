@@ -79,19 +79,21 @@ export function subscribeToMenuItems(callback) {
         // Seed default items if collection is empty
         await seedDefaultMenu();
       } else {
-        const items = snapshot.docs.map((doc, idx) => {
-          const data = doc.data();
-          const displayOrder = typeof data.displayOrder === "number"
-            ? data.displayOrder
-            : (typeof data.order === "number" ? data.order : idx + 1);
-          return {
-            id: doc.id,
-            ...data,
-            displayOrder: displayOrder,
-            image: typeof data.image === "string" ? data.image : "",
-            images: Array.isArray(data.images) ? data.images : (data.image ? [data.image] : []),
-          };
-        });
+        const items = snapshot.docs
+          .map((doc, idx) => {
+            const data = doc.data();
+            const displayOrder = typeof data.displayOrder === "number"
+              ? data.displayOrder
+              : (typeof data.order === "number" ? data.order : idx + 1);
+            return {
+              id: doc.id,
+              ...data,
+              displayOrder: displayOrder,
+              image: typeof data.image === "string" ? data.image : "",
+              images: Array.isArray(data.images) ? data.images : (data.image ? [data.image] : []),
+            };
+          })
+          .filter((item) => !item.isBanner);
 
         // Rank order sorting: #1 displayed first
         items.sort((a, b) => a.displayOrder - b.displayOrder);
