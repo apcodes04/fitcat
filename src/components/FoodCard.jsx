@@ -37,8 +37,8 @@ export default function FoodCard({ item, index, onPreOrder, variant = "mobile" }
           <div
             className={`relative w-full rounded-[.5rem] overflow-hidden mb-4 border border-[#263629] bg-[#0a140c] flex items-center justify-center transition-all duration-300 ${
               isPortrait
-                ? "h-64 sm:h-72 p-0"
-                : "h-40 sm:h-44 p-0"
+                ? "h-64 sm:h-72 p-1.5"
+                : "h-44 sm:h-48 p-1.5"
             }`}
           >
             <img
@@ -47,7 +47,7 @@ export default function FoodCard({ item, index, onPreOrder, variant = "mobile" }
               loading="lazy"
               decoding="async"
               onLoad={handleImageLoad}
-              className="w-full h-full object-cover rounded transition-all duration-300"
+              className="w-full h-full object-contain rounded transition-all duration-300"
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = "/images/menu_poster.jpeg";

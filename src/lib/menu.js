@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { collection, onSnapshot, doc, setDoc, deleteDoc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 
 const INITIAL_MENU_ITEMS = [
   {
@@ -10,6 +10,7 @@ const INITIAL_MENU_ITEMS = [
     badge: "Sugar Free",
     description: "Creamy peanut butter and fresh, sweet banana slices layered for a classic, wholesome energy boost.",
     image: "/images/menu_poster.jpeg",
+    displayOrder: 1,
     inStock: true,
   },
   {
@@ -20,6 +21,7 @@ const INITIAL_MENU_ITEMS = [
     badge: "Sugar Free",
     description: "A velvety, nutrient-rich delight with a perfectly creamy texture and natural goodness.",
     image: "/images/hero_poster.jpeg",
+    displayOrder: 2,
     inStock: true,
   },
   {
@@ -30,6 +32,7 @@ const INITIAL_MENU_ITEMS = [
     badge: "Sugar Free",
     description: "Light, airy, and crisp—the perfect satisfying crunch to keep you fueled and focused.",
     image: "/images/menu_poster.jpeg",
+    displayOrder: 3,
     inStock: true,
   },
   {
@@ -40,6 +43,7 @@ const INITIAL_MENU_ITEMS = [
     badge: "Sugar Free",
     description: "A warm, comforting bowl of whole-grain oats, rich in fiber and simmered to a perfect, hearty texture.",
     image: "/images/hero_poster.jpeg",
+    displayOrder: 4,
     inStock: true,
   },
   {
@@ -50,6 +54,7 @@ const INITIAL_MENU_ITEMS = [
     badge: "Sugar Free",
     description: "A wholesome, satisfying crunch of toasted oats, premium nuts, and vibrant dried fruits.",
     image: "/images/menu_poster.jpeg",
+    displayOrder: 5,
     inStock: true,
   },
   {
@@ -60,11 +65,12 @@ const INITIAL_MENU_ITEMS = [
     badge: "Sugar Free",
     description: "A vibrant, refreshing medley of freshly chopped fruits bursting with natural sweetness.",
     image: "/images/hero_poster.jpeg",
+    displayOrder: 6,
     inStock: true,
   },
 ];
 
-// Subscribe to real-time menu items from Firestore
+// Subscribe to real-time menu items from Firestore (sorted by rank / displayOrder)
 export function subscribeToMenuItems(callback) {
   try {
     const menuRef = collection(db, "menu");
@@ -73,15 +79,22 @@ export function subscribeToMenuItems(callback) {
         // Seed default items if collection is empty
         await seedDefaultMenu();
       } else {
-        const items = snapshot.docs.map((doc) => {
+        const items = snapshot.docs.map((doc, idx) => {
           const data = doc.data();
+          const displayOrder = typeof data.displayOrder === "number"
+            ? data.displayOrder
+            : (typeof data.order === "number" ? data.order : idx + 1);
           return {
             id: doc.id,
             ...data,
+            displayOrder: displayOrder,
             image: typeof data.image === "string" ? data.image : "",
             images: Array.isArray(data.images) ? data.images : (data.image ? [data.image] : []),
           };
         });
+
+        // Rank order sorting: #1 displayed first
+        items.sort((a, b) => a.displayOrder - b.displayOrder);
         callback(items);
       }
     });
@@ -108,23 +121,17 @@ async function seedDefaultMenu() {
 // Save or Update a Menu Item in Firestore (reflects live on website)
 export async function saveMenuItemToFirestore(itemData) {
   try {
-    const itemId = itemData.id || `item-${Date.now()}`;
-    const itemRef = doc(db, "menu", itemId);
-    const cleanData = {
-      id: itemId,
-      name: itemData.name || "Untitled Item",
-      price: Number(itemData.price) || 0,
-      category: itemData.category || "General",
-      badge: itemData.badge || "",
-      description: itemData.description || "",
-      image: itemData.image ? itemData.image.trim() : "", // Primary cover image
-      images: Array.isArray(itemData.images) ? itemData.images : (itemData.image ? [itemData.image.trim()] : []),
-      inStock: Boolean(itemData.inStock),
-      updatedAt: serverTimestamp(),
-    };
-
-    await setDoc(itemRef, cleanData, { merge: true });
-    return { success: true, id: itemId };
+    const itemRef = doc(db, "menu", itemData.id);
+    await setDoc(
+      itemRef,
+      {
+        ...itemData,
+        displayOrder: Number(itemData.displayOrder || 1),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return { success: true };
   } catch (error) {
     console.error("Error saving menu item: ", error);
     return { success: false, error: error.message };

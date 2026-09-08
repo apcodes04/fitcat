@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { subscribeToOrders, updateOrderStatusInFirestore, updateOrderInFirestore, deleteOrderFromFirestore, formatBookingDateText } from "@/lib/orders";
 import { subscribeToMenuItems, saveMenuItemToFirestore, deleteMenuItemFromFirestore } from "@/lib/menu";
+import { subscribeToBanners, saveBannerToFirestore, deleteBannerFromFirestore } from "@/lib/banners";
 import { 
   FaChartSimple, 
   FaGlobe, 
@@ -21,12 +22,15 @@ import {
   FaCalendarDays, 
   FaClock, 
   FaNoteSticky,
-  FaRightFromBracket
+  FaRightFromBracket,
+  FaImage,
+  FaArrowUp,
+  FaArrowDown
 } from "react-icons/fa6";
 import { MdOutlineRestaurantMenu } from "react-icons/md";
 
 // Utility function to compress & resize images client-side for ultra-fast loading
-const compressAndResizeImage = (file, maxWidth = 600, quality = 0.7) => {
+const compressAndResizeImage = (file, maxWidth = 800, quality = 0.75) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -63,15 +67,17 @@ export default function AdminDashboardPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authed, setAuthed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [activeTab, setActiveTab] = useState("orders"); // "orders" | "menu"
+  const [activeTab, setActiveTab] = useState("orders"); // "orders" | "menu" | "banners"
   const [orders, setOrders] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
+  const [banners, setBanners] = useState([]);
   
   // Modals state
   const [editingItem, setEditingItem] = useState(null);
-  const [editingOrder, setEditingOrder] = useState(null);
+  const [editingBanner, setEditingBanner] = useState(null);
   const [deletingOrderId, setDeletingOrderId] = useState(null);
   const [deletingMenuItemId, setDeletingMenuItemId] = useState(null);
+  const [deletingBannerId, setDeletingBannerId] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
 
   const isAuthorizedEmail = (email) => {
@@ -102,9 +108,11 @@ export default function AdminDashboardPage() {
     if (!authed) return;
     const unsubOrders = subscribeToOrders((liveOrders) => setOrders(liveOrders));
     const unsubMenu = subscribeToMenuItems((liveItems) => setMenuItems(liveItems));
+    const unsubBanners = subscribeToBanners((liveBanners) => setBanners(liveBanners));
     return () => {
       unsubOrders && unsubOrders();
       unsubMenu && unsubMenu();
+      unsubBanners && unsubBanners();
     };
   }, [authed]);
 
@@ -140,15 +148,6 @@ export default function AdminDashboardPage() {
     setTimeout(() => setStatusMessage(""), 3000);
   };
 
-  const handleSaveOrderEdit = async (e) => {
-    e.preventDefault();
-    if (!editingOrder) return;
-    await updateOrderInFirestore(editingOrder.id, editingOrder);
-    setEditingOrder(null);
-    setStatusMessage("Order updated successfully!");
-    setTimeout(() => setStatusMessage(""), 3000);
-  };
-
   const handleDeleteOrder = async (orderId) => {
     await deleteOrderFromFirestore(orderId);
     setDeletingOrderId(null);
@@ -162,7 +161,7 @@ export default function AdminDashboardPage() {
     if (!editingItem) return;
     await saveMenuItemToFirestore(editingItem);
     setEditingItem(null);
-    setStatusMessage("Menu item saved to website!");
+    setStatusMessage("Menu item saved & updated live on website!");
     setTimeout(() => setStatusMessage(""), 3000);
   };
 
@@ -183,7 +182,35 @@ export default function AdminDashboardPage() {
       description: "",
       image: "",
       images: [],
+      displayOrder: menuItems.length + 1,
       inStock: true,
+    });
+  };
+
+  // Banner Handlers
+  const handleSaveBanner = async (e) => {
+    e.preventDefault();
+    if (!editingBanner) return;
+    await saveBannerToFirestore(editingBanner);
+    setEditingBanner(null);
+    setStatusMessage("Promotional banner saved & published live!");
+    setTimeout(() => setStatusMessage(""), 3000);
+  };
+
+  const handleDeleteBanner = async (bannerId) => {
+    await deleteBannerFromFirestore(bannerId);
+    setDeletingBannerId(null);
+    setStatusMessage("Promotional banner removed.");
+    setTimeout(() => setStatusMessage(""), 3000);
+  };
+
+  const handleAddNewBanner = () => {
+    setEditingBanner({
+      id: `banner-${Date.now()}`,
+      title: "",
+      subtitle: "",
+      image: "",
+      order: banners.length + 1,
     });
   };
 
@@ -230,7 +257,7 @@ export default function AdminDashboardPage() {
 
       {/* Navigation Tabs */}
       <div className="bg-[#0a140c] border-b border-[#263629] px-6 sm:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-3">
           <button
             onClick={() => setActiveTab("orders")}
             className={`px-5 py-2.5 rounded-full font-bold text-xs transition flex items-center gap-2 ${
@@ -252,6 +279,17 @@ export default function AdminDashboardPage() {
           >
             <MdOutlineRestaurantMenu className="text-sm" />
             <span>Food Menu & Prices ({menuItems.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("banners")}
+            className={`px-5 py-2.5 rounded-full font-bold text-xs transition flex items-center gap-2 ${
+              activeTab === "banners"
+                ? "bg-[#E5C158] text-[#0f110f] shadow-sm"
+                : "bg-[#162118] text-[#9A978F] hover:text-[#FAF9F5] border border-[#263629]"
+            }`}
+          >
+            <FaImage className="text-xs" />
+            <span>Promotional Banners ({banners.length})</span>
           </button>
         </div>
       </div>
@@ -354,7 +392,7 @@ export default function AdminDashboardPage() {
                         )}
                       </div>
 
-                      {/* Status, Edit & Delete Controls */}
+                      {/* Status & Controls */}
                       <div className="flex flex-col items-end gap-2 w-full md:w-auto border-t md:border-t-0 border-[#263629] pt-3 md:pt-0">
                         <span className="text-2xl font-extrabold text-[#E5C158]">₹{order.totalAmount}</span>
 
@@ -379,15 +417,6 @@ export default function AdminDashboardPage() {
                           </select>
 
                           <button
-                            onClick={() => setEditingOrder(order)}
-                            className="bg-[#162118] hover:bg-[#263629] text-[#E5C158] text-xs font-bold px-3 py-1.5 rounded-full border border-[#263629] transition flex items-center gap-1"
-                            title="Edit Order"
-                          >
-                            <FaPenToSquare className="w-3 h-3 text-[#E5C158]" />
-                            <span>Edit</span>
-                          </button>
-
-                          <button
                             onClick={() => setDeletingOrderId(order.id)}
                             className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-red-500/40 transition flex items-center gap-1"
                             title="Delete Order"
@@ -405,14 +434,14 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 2: FOOD MENU & PRICING MANAGER */}
+        {/* TAB 2: FOOD MENU & PRICING MANAGER WITH ITEM RANKING */}
         {activeTab === "menu" && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#162118] p-6 rounded-[.75rem] border border-[#263629] shadow-sm">
               <div>
                 <h1 className="text-xl font-bold text-[#E5C158]">Menu & Price Manager</h1>
                 <p className="text-xs text-[#9A978F] mt-0.5">
-                  Manage food prices, multi-photo galleries, stock status, and item details. Changes reflect live on fitcat.in!
+                  Set custom display ranking (#1, #2, #3...), upload multiple photos per item, and adjust food prices live!
                 </p>
               </div>
 
@@ -426,7 +455,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {menuItems.map((item) => (
+              {menuItems.map((item, idx) => (
                 <div
                   key={item.id}
                   className={`bg-[#162118] p-5 rounded-[.75rem] border ${
@@ -436,15 +465,21 @@ export default function AdminDashboardPage() {
                   <div>
                     {/* Optional Image Thumbnail Preview */}
                     {item.image && item.image.trim() !== "" && (
-                      <div className="w-full h-36 rounded-[.5rem] overflow-hidden mb-3 border border-[#263629] bg-[#0a140c]">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                      <div className="w-full h-40 rounded-[.5rem] overflow-hidden mb-3 border border-[#263629] bg-[#0a140c] flex items-center justify-center p-1">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
                       </div>
                     )}
 
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-bold text-[#E5C158] bg-[#0e2413] px-2.5 py-1 rounded-full border border-[#1b4224]">
-                        {item.category || "General"}
-                      </span>
+                    <div className="flex justify-between items-start mb-2 gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-bold text-[#E5C158] bg-[#0e2413] px-2.5 py-1 rounded-full border border-[#1b4224]">
+                          {item.category || "General"}
+                        </span>
+                        <span className="text-xs font-bold text-[#FAF9F5] bg-[#0a140c] px-2.5 py-1 rounded-full border border-[#263629]">
+                          Rank #{item.displayOrder || idx + 1}
+                        </span>
+                      </div>
+
                       <button
                         onClick={() => saveMenuItemToFirestore({ ...item, inStock: !item.inStock })}
                         className={`text-xs font-bold px-3 py-1 rounded-full transition flex items-center gap-1.5 ${
@@ -481,12 +516,13 @@ export default function AdminDashboardPage() {
                             ...item,
                             image: item.image || "",
                             images: images,
+                            displayOrder: item.displayOrder || idx + 1,
                           });
                         }}
                         className="flex-1 bg-[#0a140c] hover:bg-[#263629] text-[#FAF9F5] hover:text-[#E5C158] font-bold py-2 rounded-full border border-[#263629] text-xs transition flex items-center justify-center gap-1.5"
                       >
                         <FaPenToSquare className="text-xs text-[#E5C158]" />
-                        <span>Edit Item & Photos</span>
+                        <span>Edit Rank & Photos</span>
                       </button>
                       <button
                         onClick={() => setDeletingMenuItemId(item.id)}
@@ -496,6 +532,67 @@ export default function AdminDashboardPage() {
                         <FaTrashCan className="text-xs" />
                       </button>
                     </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: PROMOTIONAL BANNERS MANAGER */}
+        {activeTab === "banners" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#162118] p-6 rounded-[.75rem] border border-[#263629] shadow-sm">
+              <div>
+                <h1 className="text-xl font-bold text-[#E5C158]">Promotional Banners Manager</h1>
+                <p className="text-xs text-[#9A978F] mt-0.5">
+                  Upload multiple scrollable banner posters displayed right above the FITCAT MENU on mobile and desktop!
+                </p>
+              </div>
+
+              <button
+                onClick={handleAddNewBanner}
+                className="bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] font-bold px-5 py-2.5 rounded-full shadow-sm text-xs flex items-center gap-2 transition active:scale-95"
+              >
+                <FaPlus className="text-xs" />
+                <span>Upload New Banner</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {banners.map((banner, idx) => (
+                <div
+                  key={banner.id}
+                  className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] hover:border-[#3d5441] shadow-sm flex flex-col justify-between space-y-4 overflow-hidden"
+                >
+                  <div>
+                    {banner.image && (
+                      <div className="w-full h-44 rounded-[.5rem] overflow-hidden mb-3 border border-[#263629] bg-[#0a140c] flex items-center justify-center p-1">
+                        <img src={banner.image} alt={banner.title} className="w-full h-full object-contain" />
+                      </div>
+                    )}
+                    <span className="text-xs font-bold text-[#E5C158] bg-[#0e2413] px-2.5 py-0.5 rounded-full border border-[#1b4224] inline-block mb-2">
+                      Banner #{banner.order || idx + 1}
+                    </span>
+                    <h3 className="text-base font-bold text-[#FAF9F5] mb-1">{banner.title || "Promotional Banner"}</h3>
+                    <p className="text-xs text-[#9A978F]">{banner.subtitle}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-3 border-t border-[#263629]">
+                    <button
+                      onClick={() => setEditingBanner(banner)}
+                      className="flex-1 bg-[#0a140c] hover:bg-[#263629] text-[#FAF9F5] hover:text-[#E5C158] font-bold py-2 rounded-full border border-[#263629] text-xs transition flex items-center justify-center gap-1.5"
+                    >
+                      <FaPenToSquare className="text-xs text-[#E5C158]" />
+                      <span>Edit Banner</span>
+                    </button>
+                    <button
+                      onClick={() => setDeletingBannerId(banner.id)}
+                      className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-3 py-2 rounded-full border border-red-500/40 text-xs font-bold transition flex items-center justify-center"
+                      title="Delete Banner"
+                    >
+                      <FaTrashCan className="text-xs" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -530,7 +627,7 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-[#E5C158] mb-1">Price (₹)</label>
                   <input
@@ -542,10 +639,21 @@ export default function AdminDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#E5C158] mb-1">Category / Tag</label>
+                  <label className="block text-xs font-bold text-[#E5C158] mb-1">Display Rank (#)</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={editingItem.displayOrder || 1}
+                    onChange={(e) => setEditingItem({ ...editingItem, displayOrder: Number(e.target.value) })}
+                    className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#E5C158] mb-1">Category</label>
                   <input
                     type="text"
-                    placeholder="Bowl, Sandwich, Snack..."
+                    placeholder="Bowl, Sandwich..."
                     value={editingItem.category}
                     onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
                     className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
@@ -581,7 +689,7 @@ export default function AdminDashboardPage() {
 
                 <div className="space-y-2">
                   <label className="block">
-                    <span className="text-[11px] text-[#9A978F] font-medium block mb-1">Upload Photos (Landscape or Portrait):</span>
+                    <span className="text-[11px] text-[#9A978F] font-medium block mb-1">Upload Photos (Shown at Full Resolution without cutting):</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -617,8 +725,8 @@ export default function AdminDashboardPage() {
                   {editingItem.images && editingItem.images.length > 0 && (
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-[#263629]">
                       {editingItem.images.map((imgUrl, imgIdx) => (
-                        <div key={imgIdx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#263629] group">
-                          <img src={imgUrl} alt="preview" className="w-full h-full object-cover" />
+                        <div key={imgIdx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#263629] bg-[#0a140c] p-0.5">
+                          <img src={imgUrl} alt="preview" className="w-full h-full object-contain" />
                           <button
                             type="button"
                             onClick={() => {
@@ -677,7 +785,101 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
+      {/* EDIT PROMOTIONAL BANNER MODAL */}
+      {editingBanner && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-md w-full text-[#FAF9F5] shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#263629] pb-3">
+              <h3 className="text-lg font-bold text-[#E5C158]">
+                {editingBanner.title ? `Edit Banner` : "Add New Banner"}
+              </h3>
+              <button onClick={() => setEditingBanner(null)} className="text-[#9A978F] hover:text-[#FAF9F5] p-1.5 rounded-full hover:bg-[#263629] transition">
+                <FaXmark className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBanner} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-[#E5C158] mb-1">Banner Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Good Food • Good Mood"
+                  value={editingBanner.title || ""}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, title: e.target.value })}
+                  className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#E5C158] mb-1">Subtitle / Badge</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Fitcat Daily Special"
+                  value={editingBanner.subtitle || ""}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, subtitle: e.target.value })}
+                  className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-xs text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#E5C158] mb-1">Banner Sequence Order (#)</label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  value={editingBanner.order || 1}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, order: Number(e.target.value) })}
+                  className="w-full bg-[#0a140c] border border-[#263629] rounded-lg p-2 text-sm text-[#FAF9F5] focus:outline-none focus:border-[#05c92f]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#E5C158] mb-1">Banner Poster Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      try {
+                        const compressed = await compressAndResizeImage(file, 1000, 0.8);
+                        setEditingBanner((prev) => ({ ...prev, image: compressed }));
+                      } catch (err) {
+                        console.error("Banner image compression error:", err);
+                      }
+                    }
+                  }}
+                  className="w-full text-xs text-[#9A978F] file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#05c92f] file:text-[#0f110f] hover:file:bg-[#3ade5c] cursor-pointer bg-[#0a140c] border border-[#263629] rounded-lg p-1"
+                />
+              </div>
+
+              {editingBanner.image && (
+                <div className="w-full h-36 rounded-lg overflow-hidden border border-[#263629] bg-[#0a140c] flex items-center justify-center p-1">
+                  <img src={editingBanner.image} alt="banner preview" className="w-full h-full object-contain" />
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-[#263629] flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingBanner(null)}
+                  className="px-4 py-2 rounded-full border border-[#263629] text-xs font-bold text-[#9A978F] hover:text-[#FAF9F5]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-full bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] text-xs font-bold shadow transition"
+                >
+                  Save & Publish Banner
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODALS */}
       {deletingMenuItemId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
@@ -692,6 +894,29 @@ export default function AdminDashboardPage() {
               </button>
               <button
                 onClick={() => handleDeleteMenuItem(deletingMenuItemId)}
+                className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow"
+              >
+                Delete Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deletingBannerId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-[#E5C158]">Delete Banner?</h3>
+            <p className="text-xs text-[#9A978F]">This will remove the banner from the promotional carousel.</p>
+            <div className="flex justify-center gap-3 pt-2">
+              <button
+                onClick={() => setDeletingBannerId(null)}
+                className="px-4 py-2 rounded-full border border-[#263629] text-xs font-bold text-[#9A978F]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteBanner(deletingBannerId)}
                 className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow"
               >
                 Delete Now

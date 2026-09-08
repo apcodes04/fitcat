@@ -5,6 +5,7 @@ import Logo from "../Logo";
 import MapSection from "../MapSection";
 import PreOrderModal from "../PreOrderModal";
 import FoodCard from "../FoodCard";
+import BannerCarousel from "../BannerCarousel";
 import WhatsAppIcon from "../WhatsAppIcon";
 import InstagramIcon from "../InstagramIcon";
 import { subscribeToMenuItems } from "@/lib/menu";
@@ -132,6 +133,11 @@ export default function MobileView() {
             <span>Pre-Order via WhatsApp Now</span>
           </button>
         </div>
+      </section>
+
+      {/* Promotional Banner Scrollable Carousel */}
+      <section className="px-4 pt-2 pb-1">
+        <BannerCarousel />
       </section>
 
       {/* Food Menu Section */}

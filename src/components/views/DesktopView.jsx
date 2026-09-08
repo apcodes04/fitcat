@@ -5,6 +5,7 @@ import Logo from "../Logo";
 import MapSection from "../MapSection";
 import PreOrderModal from "../PreOrderModal";
 import FoodCard from "../FoodCard";
+import BannerCarousel from "../BannerCarousel";
 import WhatsAppIcon from "../WhatsAppIcon";
 import InstagramIcon from "../InstagramIcon";
 import { subscribeToMenuItems } from "@/lib/menu";
@@ -152,8 +153,13 @@ export default function DesktopView() {
 
       {/* Desktop Menu Grid Section */}
       <section id="menu" className="px-8 py-16 bg-[#0a140c] border-t border-b border-[#263629]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-12">
+        <div className="max-w-7xl mx-auto space-y-10">
+          {/* Scrollable Promotional Banner Showcase */}
+          <div className="max-w-4xl mx-auto">
+            <BannerCarousel />
+          </div>
+
+          <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold text-[#E5C158] tracking-wider uppercase">FITCAT MENU</h2>
             <p className="text-[#9A978F] text-sm mt-2">
               Freshly prepared healthy breakfasts served daily from 6:30 AM to 9:30 AM at Vikhroli East Station.
