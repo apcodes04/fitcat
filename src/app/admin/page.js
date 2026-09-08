@@ -56,7 +56,7 @@ import {
 import { MdOutlineRestaurantMenu } from "react-icons/md";
 
 // Client-side WebP/JPEG Image Compressor for Ultra-Fast Loading & Reliable Mobile Uploads
-const compressAndResizeImage = (file, maxWidth = 800, quality = 0.65) => {
+const compressAndResizeImage = (file, maxDim = 800, quality = 0.55) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -68,9 +68,14 @@ const compressAndResizeImage = (file, maxWidth = 800, quality = 0.65) => {
         let width = img.width;
         let height = img.height;
 
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
         }
 
         canvas.width = width;
@@ -80,15 +85,14 @@ const compressAndResizeImage = (file, maxWidth = 800, quality = 0.65) => {
 
         let dataUrl = canvas.toDataURL("image/jpeg", quality);
 
-        // If string exceeds 500KB, scale down further to guarantee Firestore save success on mobile
-        if (dataUrl.length > 500000) {
+        // If string exceeds 220KB, scale down slightly further to guarantee instant save
+        if (dataUrl.length > 220000) {
           const smallCanvas = document.createElement("canvas");
-          const scale = 600 / Math.max(width, 1);
-          smallCanvas.width = 600;
-          smallCanvas.height = Math.round(height * scale);
+          smallCanvas.width = Math.round(width * 0.75);
+          smallCanvas.height = Math.round(height * 0.75);
           const sCtx = smallCanvas.getContext("2d");
           sCtx.drawImage(img, 0, 0, smallCanvas.width, smallCanvas.height);
-          dataUrl = smallCanvas.toDataURL("image/jpeg", 0.55);
+          dataUrl = smallCanvas.toDataURL("image/jpeg", 0.45);
         }
 
         resolve(dataUrl);
@@ -261,15 +265,14 @@ export default function AdminDashboardPage() {
     }
     const res = await saveBannerToFirestore(editingBanner);
     if (res.success) {
+      if (res.banners) {
+        setBanners(res.banners);
+      }
       setEditingBanner(null);
-      setStatusMessage(
-        res.fallback
-          ? "Promotional banner saved locally!"
-          : "Promotional banner saved & published live!"
-      );
+      setStatusMessage("Menu card image saved & published live!");
       setTimeout(() => setStatusMessage(""), 3000);
     } else {
-      alert(`Failed to save banner image: ${res.error}`);
+      alert(`Failed to save menu card image: ${res.error}`);
     }
   };
 
@@ -1158,7 +1161,7 @@ export default function AdminDashboardPage() {
           <div className="bg-[#171a17] border border-[#262a26] rounded-xl p-6 max-w-md w-full text-[#faf9f5] shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[#262a26] pb-3">
               <h3 className="text-base font-semibold text-[#faf9f5]">
-                {editingBanner.title ? `Edit Banner` : "Add New Banner"}
+                {editingBanner.title ? `Edit Menu Card Image` : "Add New Menu Card Image"}
               </h3>
               <button
                 onClick={() => setEditingBanner(null)}
@@ -1170,10 +1173,10 @@ export default function AdminDashboardPage() {
 
             <form onSubmit={handleSaveBanner} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Banner Title</label>
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Card Image Title (Optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Good Food • Good Mood"
+                  placeholder="e.g. FitCat Sugar Free Breakfast Menu"
                   value={editingBanner.title || ""}
                   onChange={(e) => setEditingBanner({ ...editingBanner, title: e.target.value })}
                   className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-sm text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
@@ -1181,18 +1184,7 @@ export default function AdminDashboardPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Subtitle / Badge</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Fitcat Daily Special"
-                  value={editingBanner.subtitle || ""}
-                  onChange={(e) => setEditingBanner({ ...editingBanner, subtitle: e.target.value })}
-                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-xs text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Banner Poster Image</label>
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Menu Card Image Poster</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -1201,7 +1193,7 @@ export default function AdminDashboardPage() {
                     if (file) {
                       try {
                         setIsCompressingBanner(true);
-                        const compressed = await compressAndResizeImage(file, 800, 0.65);
+                        const compressed = await compressAndResizeImage(file, 800, 0.55);
                         setEditingBanner((prev) => ({ ...prev, image: compressed }));
                       } catch (err) {
                         console.error("Banner compression error:", err);
@@ -1239,7 +1231,7 @@ export default function AdminDashboardPage() {
                   disabled={isCompressingBanner}
                   className="px-5 py-2 rounded-full bg-[#05c92f] hover:bg-[#3ade5c] disabled:opacity-50 text-[#0f110f] text-xs font-semibold shadow transition"
                 >
-                  {isCompressingBanner ? "Processing Image..." : "Save & Publish Banner"}
+                  {isCompressingBanner ? "Processing Image..." : "Save & Publish Menu Card Image"}
                 </button>
               </div>
             </form>
