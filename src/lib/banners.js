@@ -7,6 +7,7 @@ const DEFAULT_BANNERS = [
     title: "FitCat Special Breakfast Menu",
     image: "/images/hero_poster.jpeg",
     order: 1,
+    displayOrder: 1,
     isBanner: true,
   },
   {
@@ -14,6 +15,7 @@ const DEFAULT_BANNERS = [
     title: "Fresh & Sugar Free Daily Menu",
     image: "/images/menu_poster.jpeg",
     order: 2,
+    displayOrder: 2,
     isBanner: true,
   },
 ];
@@ -35,9 +37,10 @@ export function subscribeToBanners(callback) {
                 id: doc.id,
                 ...data,
                 order: Number(data.order || data.displayOrder || idx + 1),
+                displayOrder: Number(data.displayOrder || data.order || idx + 1),
               };
             })
-            .filter((item) => item.isBanner === true);
+            .filter((item) => item.isBanner === true && typeof item.image === "string" && item.image.trim() !== "");
 
           if (banners.length === 0) {
             callback(DEFAULT_BANNERS);
@@ -68,6 +71,7 @@ export async function saveBannerToFirestore(bannerData) {
       title: bannerData.title || "",
       image: bannerData.image,
       order: Number(bannerData.order || 1),
+      displayOrder: Number(bannerData.order || 1),
       isBanner: true,
       updatedAt: serverTimestamp(),
     };
@@ -92,7 +96,7 @@ export async function deleteBannerFromFirestore(bannerId) {
   }
 }
 
-// Reorder Menu Card Images DIRECTLY in Cloud Firestore
+// Reorder Menu Card Images DIRECTLY in Cloud Firestore with full payload
 export async function reorderBannersInFirestore(bannersList) {
   try {
     const promises = bannersList.map((banner, index) => {
@@ -100,6 +104,8 @@ export async function reorderBannersInFirestore(bannersList) {
       return setDoc(
         bannerRef,
         {
+          ...banner,
+          id: banner.id,
           order: index + 1,
           displayOrder: index + 1,
           isBanner: true,
