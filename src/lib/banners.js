@@ -3,19 +3,11 @@ import { collection, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 
 
 const DEFAULT_BANNERS = [
   {
-    id: "banner-poster-1",
-    title: "FitCat Special Breakfast Menu",
-    image: "/images/hero_poster.jpeg",
+    id: "fitcat-official-menu-poster",
+    title: "Fitcat Official Menu",
+    image: "/images/fitcat_official_menu.jpg",
     order: 1,
     displayOrder: 1,
-    isBanner: true,
-  },
-  {
-    id: "banner-poster-2",
-    title: "Fresh & Sugar Free Daily Menu",
-    image: "/images/menu_poster.jpeg",
-    order: 2,
-    displayOrder: 2,
     isBanner: true,
   },
 ];
