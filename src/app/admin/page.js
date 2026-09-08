@@ -25,7 +25,13 @@ import {
   FaRightFromBracket,
   FaImage,
   FaArrowUp,
-  FaArrowDown
+  FaArrowDown,
+  FaUserGroup,
+  FaFilter,
+  FaListUl,
+  FaUtensils,
+  FaChevronDown,
+  FaChevronUp
 } from "react-icons/fa6";
 import { MdOutlineRestaurantMenu } from "react-icons/md";
 
@@ -72,13 +78,25 @@ export default function AdminDashboardPage() {
   const [menuItems, setMenuItems] = useState([]);
   const [banners, setBanners] = useState([]);
   
-  // Modals state
+  // Modals & Filter state
   const [editingItem, setEditingItem] = useState(null);
   const [editingBanner, setEditingBanner] = useState(null);
   const [deletingOrderId, setDeletingOrderId] = useState(null);
   const [deletingMenuItemId, setDeletingMenuItemId] = useState(null);
   const [deletingBannerId, setDeletingBannerId] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
+
+  // Date filtering & Customer grouping state
+  const [selectedDateFilter, setSelectedDateFilter] = useState("ALL");
+  const [orderViewMode, setOrderViewMode] = useState("grouped"); // "grouped" | "list"
+  const [expandedCustomers, setExpandedCustomers] = useState({});
+
+  const toggleCustomerExpand = (name) => {
+    setExpandedCustomers((prev) => ({
+      ...prev,
+      [name]: prev[name] === undefined ? false : !prev[name], // default expanded when false/undefined
+    }));
+  };
 
   const isAuthorizedEmail = (email) => {
     if (!email) return false;
@@ -219,9 +237,76 @@ export default function AdminDashboardPage() {
     router.push("/admin/login");
   };
 
-  // Analytics calculation
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  const pendingOrdersCount = orders.filter((o) => o.status === "Pending").length;
+  // Analytics & Filtering Calculations
+  const uniqueBookingDates = Array.from(
+    new Set(
+      orders
+        .map((o) => formatBookingDateText(o.bookingDate))
+        .filter(Boolean)
+    )
+  );
+
+  const todayFormatted = formatBookingDateText(new Date().toISOString().split("T")[0]);
+
+  // Filter orders based on selected date
+  const filteredOrders = orders.filter((order) => {
+    if (selectedDateFilter === "ALL") return true;
+    if (selectedDateFilter === "TODAY") {
+      return formatBookingDateText(order.bookingDate) === todayFormatted;
+    }
+    return formatBookingDateText(order.bookingDate) === selectedDateFilter;
+  });
+
+  // Analytics calculations on filtered orders
+  const totalFoodItemsOrdered = filteredOrders.reduce((sum, order) => {
+    const itemsCount = order.items?.reduce((itemSum, item) => itemSum + (Number(item.qty) || 1), 0) || 0;
+    return sum + itemsCount;
+  }, 0);
+
+  const uniqueCustomersCount = new Set(
+    filteredOrders.map((o) => (o.customerName || "").trim().toLowerCase()).filter(Boolean)
+  ).size;
+
+  const filteredTotalRevenue = filteredOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+  const filteredPendingCount = filteredOrders.filter((o) => (o.status || "Pending") === "Pending").length;
+
+  // Item-wise pre-order demand summary map
+  const itemDemandSummary = {};
+  filteredOrders.forEach((order) => {
+    order.items?.forEach((item) => {
+      const name = item.name || "Unknown Item";
+      const qty = Number(item.qty) || 1;
+      itemDemandSummary[name] = (itemDemandSummary[name] || 0) + qty;
+    });
+  });
+
+  const rankedItemDemand = Object.entries(itemDemandSummary)
+    .map(([itemName, totalQty]) => ({ itemName, totalQty }))
+    .sort((a, b) => b.totalQty - a.totalQty);
+
+  // Group filtered orders by Customer Name
+  const groupedOrdersMap = {};
+  filteredOrders.forEach((order) => {
+    const key = (order.customerName || "Guest Customer").trim();
+    if (!groupedOrdersMap[key]) {
+      groupedOrdersMap[key] = {
+        customerName: key,
+        customerPhone: order.customerPhone || "",
+        ordersList: [],
+        totalSpent: 0,
+        totalItemsCount: 0,
+      };
+    }
+    groupedOrdersMap[key].ordersList.push(order);
+    groupedOrdersMap[key].totalSpent += Number(order.totalAmount) || 0;
+    const orderItemsCount = order.items?.reduce((sum, i) => sum + (Number(i.qty) || 1), 0) || 0;
+    groupedOrdersMap[key].totalItemsCount += orderItemsCount;
+    if (!groupedOrdersMap[key].customerPhone && order.customerPhone) {
+      groupedOrdersMap[key].customerPhone = order.customerPhone;
+    }
+  });
+
+  const customerGroupsList = Object.values(groupedOrdersMap);
 
   return (
     <div className="min-h-screen bg-[#0f120f] text-[#FAF9F5] font-sans selection:bg-[#05c92f]/20">
@@ -307,43 +392,294 @@ export default function AdminDashboardPage() {
         {/* TAB 1: REAL-TIME WHATSAPP ORDERS LOG */}
         {activeTab === "orders" && (
           <div className="space-y-6">
-            {/* Analytics Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
-                <span className="text-xs font-bold text-[#E5C158] uppercase tracking-wider">Total Recorded Orders</span>
-                <h3 className="text-3xl font-extrabold text-[#FAF9F5] mt-1">{orders.length}</h3>
+            {/* Filter & View Mode Controls Bar */}
+            <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <span className="text-xs font-bold text-[#E5C158] flex items-center gap-1.5">
+                  <FaFilter className="text-xs text-[#05c92f]" />
+                  <span>Filter by Date:</span>
+                </span>
+                <select
+                  value={selectedDateFilter}
+                  onChange={(e) => setSelectedDateFilter(e.target.value)}
+                  className="bg-[#0a140c] text-[#FAF9F5] border border-[#263629] text-xs font-bold px-4 py-2 rounded-full focus:outline-none focus:border-[#05c92f] cursor-pointer shadow-sm"
+                >
+                  <option value="ALL">📅 All Pre-Order Dates ({orders.length} orders)</option>
+                  <option value="TODAY">🔥 Today ({todayFormatted})</option>
+                  {uniqueBookingDates.map((dateStr, idx) => (
+                    <option key={idx} value={dateStr}>
+                      📆 {dateStr}
+                    </option>
+                  ))}
+                </select>
+                {selectedDateFilter !== "ALL" && (
+                  <button
+                    onClick={() => setSelectedDateFilter("ALL")}
+                    className="text-[11px] font-bold text-[#E5C158] bg-[#0a140c] hover:bg-[#263629] px-3 py-1.5 rounded-full border border-[#263629] transition"
+                  >
+                    Clear Filter
+                  </button>
+                )}
               </div>
-              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
-                <span className="text-xs font-bold text-[#E5C158] uppercase tracking-wider">Total Projected Revenue</span>
-                <h3 className="text-3xl font-extrabold text-[#E5C158] mt-1">₹{totalRevenue}</h3>
-              </div>
-              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
-                <span className="text-xs font-bold text-[#E5C158] uppercase tracking-wider">Pending Orders Queue</span>
-                <h3 className="text-3xl font-extrabold text-yellow-400 mt-1">{pendingOrdersCount}</h3>
+
+              <div className="flex items-center gap-2 bg-[#0a140c] p-1 rounded-full border border-[#263629] w-full md:w-auto justify-center">
+                <button
+                  onClick={() => setOrderViewMode("grouped")}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${
+                    orderViewMode === "grouped"
+                      ? "bg-[#E5C158] text-[#0f110f] shadow-sm"
+                      : "text-[#9A978F] hover:text-[#FAF9F5]"
+                  }`}
+                >
+                  <FaUserGroup className="text-xs" />
+                  <span>Grouped by Customer ({customerGroupsList.length})</span>
+                </button>
+                <button
+                  onClick={() => setOrderViewMode("list")}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${
+                    orderViewMode === "list"
+                      ? "bg-[#E5C158] text-[#0f110f] shadow-sm"
+                      : "text-[#9A978F] hover:text-[#FAF9F5]"
+                  }`}
+                >
+                  <FaListUl className="text-xs" />
+                  <span>All Orders List ({filteredOrders.length})</span>
+                </button>
               </div>
             </div>
 
-            {/* Orders Queue Table / Cards */}
+            {/* Top Analytics Summary Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
+                <span className="text-[11px] font-bold text-[#E5C158] uppercase tracking-wider block">Total Food Pre-Orders</span>
+                <h3 className="text-3xl font-extrabold text-[#FAF9F5] mt-1 flex items-center gap-2">
+                  <span>{totalFoodItemsOrdered}</span>
+                  <span className="text-xs font-normal text-[#9A978F]">items</span>
+                </h3>
+                <p className="text-[10px] text-[#9A978F] mt-1">Across {filteredOrders.length} pre-order tickets</p>
+              </div>
+
+              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
+                <span className="text-[11px] font-bold text-[#E5C158] uppercase tracking-wider block">Unique Customers</span>
+                <h3 className="text-3xl font-extrabold text-[#FAF9F5] mt-1 flex items-center gap-2">
+                  <span>{uniqueCustomersCount}</span>
+                  <span className="text-xs font-normal text-[#9A978F]">people</span>
+                </h3>
+                <p className="text-[10px] text-[#9A978F] mt-1">Pre-ordered under their name</p>
+              </div>
+
+              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
+                <span className="text-[11px] font-bold text-[#E5C158] uppercase tracking-wider block">Projected Revenue</span>
+                <h3 className="text-3xl font-extrabold text-[#E5C158] mt-1">₹{filteredTotalRevenue}</h3>
+                <p className="text-[10px] text-[#9A978F] mt-1">Total revenue from selection</p>
+              </div>
+
+              <div className="bg-[#162118] p-5 rounded-[.75rem] border border-[#263629] shadow-sm">
+                <span className="text-[11px] font-bold text-[#E5C158] uppercase tracking-wider block">Pending Queue</span>
+                <h3 className="text-3xl font-extrabold text-yellow-400 mt-1">{filteredPendingCount}</h3>
+                <p className="text-[10px] text-[#9A978F] mt-1">Awaiting confirmation</p>
+              </div>
+            </div>
+
+            {/* Menu Items Pre-Order Demand Ranking Summary */}
+            {rankedItemDemand.length > 0 && (
+              <div className="bg-[#162118] p-6 rounded-[.75rem] border border-[#263629] shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-[#263629] pb-3">
+                  <div className="flex items-center gap-2">
+                    <FaUtensils className="text-[#05c92f] text-sm" />
+                    <h3 className="text-base font-bold text-[#E5C158]">Item-Wise Pre-Order Demand Ranking</h3>
+                  </div>
+                  <span className="text-xs text-[#9A978F] font-bold">
+                    {selectedDateFilter === "ALL" ? "All-Time Ranking" : `Ranked for ${selectedDateFilter}`}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {rankedItemDemand.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-[#0a140c] p-3.5 rounded-xl border border-[#263629] flex items-center justify-between gap-3 shadow-sm"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-7 h-7 rounded-full bg-[#162118] border border-[#E5C158]/40 text-[#E5C158] font-black text-xs flex items-center justify-center shrink-0">
+                          #{idx + 1}
+                        </span>
+                        <span className="text-xs font-bold text-[#FAF9F5] truncate">{item.itemName}</span>
+                      </div>
+                      <span className="bg-[#0e2413] text-[#05c92f] border border-[#1b4224] text-xs font-extrabold px-3 py-1 rounded-full shrink-0">
+                        {item.totalQty} pre-ordered
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Main Orders View Section */}
             <div className="bg-[#162118] rounded-[.75rem] border border-[#263629] p-6 shadow-sm space-y-4">
               <div className="flex justify-between items-center border-b border-[#263629] pb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-[#E5C158]">Real-Time Orders Management</h2>
-                  <p className="text-xs text-[#9A978F] mt-0.5">Edit order details or remove orders live from Firebase</p>
+                  <h2 className="text-xl font-bold text-[#E5C158]">
+                    {orderViewMode === "grouped" ? "Customer Pre-Orders Directory" : "WhatsApp Pre-Orders List"}
+                  </h2>
+                  <p className="text-xs text-[#9A978F] mt-0.5">
+                    {selectedDateFilter === "ALL"
+                      ? "Showing all pre-orders from database"
+                      : `Showing pre-orders for ${selectedDateFilter}`}
+                  </p>
                 </div>
                 <span className="inline-flex items-center gap-1.5 bg-[#0e2413] text-[#05c92f] border border-[#1b4224] text-xs px-3 py-1 rounded-full font-bold">
                   <span className="w-2 h-2 rounded-full bg-[#05c92f] animate-pulse"></span>
-                  Live Firebase Listener Active
+                  Live Firebase Synchronized
                 </span>
               </div>
 
-              {orders.length === 0 ? (
+              {filteredOrders.length === 0 ? (
                 <div className="text-center py-12 text-[#9A978F] text-xs space-y-3">
                   <FaMobileScreen className="text-4xl mx-auto text-[#E5C158]" />
-                  <p>No orders logged yet. Place a test pre-order on the main site to see it appear here live!</p>
+                  <p>No orders found for the selected date filter. Select "All Pre-Order Dates" or place a new order on fitcat.in!</p>
+                </div>
+              ) : orderViewMode === "grouped" ? (
+                /* GROUPED BY CUSTOMER VIEW */
+                <div className="space-y-4">
+                  {customerGroupsList.map((group, groupIdx) => {
+                    const isCollapsed = expandedCustomers[group.customerName] === true; // expanded by default unless true in collapsed state
+                    return (
+                      <div
+                        key={groupIdx}
+                        className="bg-[#0a140c] rounded-[.75rem] border border-[#263629] overflow-hidden shadow-sm transition"
+                      >
+                        {/* Customer Group Banner */}
+                        <div
+                          onClick={() => toggleCustomerExpand(group.customerName)}
+                          className="bg-[#162118] p-4 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-[#1f2d22] transition border-b border-[#263629]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#0e2413] border border-[#05c92f]/40 flex items-center justify-center text-[#05c92f] font-black text-sm">
+                              {group.customerName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-extrabold text-base text-[#FAF9F5]">{group.customerName}</h4>
+                                <span className="bg-[#E5C158] text-[#0f110f] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                  {group.ordersList.length} {group.ordersList.length === 1 ? "Order" : "Orders"}
+                                </span>
+                              </div>
+                              {group.customerPhone && (
+                                <a
+                                  href={`tel:${group.customerPhone}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs text-[#E5C158] hover:underline font-bold inline-flex items-center gap-1 mt-0.5"
+                                >
+                                  <FaPhone className="text-[10px]" />
+                                  <span>{group.customerPhone}</span>
+                                </a>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <span className="text-xs text-[#9A978F] block">Total Spent</span>
+                              <span className="text-base font-extrabold text-[#E5C158]">₹{group.totalSpent}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xs text-[#9A978F] block">Items Pre-Ordered</span>
+                              <span className="text-base font-extrabold text-[#FAF9F5]">{group.totalItemsCount} items</span>
+                            </div>
+                            <button className="text-[#E5C158] p-2 hover:bg-[#263629] rounded-full transition">
+                              {isCollapsed ? <FaChevronDown className="w-4 h-4" /> : <FaChevronUp className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Sub-Orders List for this customer */}
+                        {!isCollapsed && (
+                          <div className="p-4 space-y-3 bg-[#0a140c]">
+                            {group.ordersList.map((order) => (
+                              <div
+                                key={order.id}
+                                className="bg-[#162118] p-4 rounded-xl border border-[#263629] flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                              >
+                                <div className="space-y-1.5 flex-1">
+                                  <div className="flex flex-wrap items-center gap-3 text-xs text-[#E5C158]">
+                                    <span className="inline-flex items-center gap-1 font-bold bg-[#0a140c] px-2.5 py-1 rounded-full border border-[#263629]">
+                                      <FaCalendarDays className="text-[10px] text-[#05c92f]" />
+                                      <span>Pickup Date: <strong>{formatBookingDateText(order.bookingDate)}</strong></span>
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 font-bold bg-[#0a140c] px-2.5 py-1 rounded-full border border-[#263629]">
+                                      <FaClock className="text-[10px] text-[#05c92f]" />
+                                      <span>Time Slot: <strong>{order.timeSlot}</strong></span>
+                                    </span>
+                                    <span className="text-[11px] text-[#9A978F] ml-auto">Placed: {order.formattedTime}</span>
+                                  </div>
+
+                                  {/* Order Items list */}
+                                  <div className="pt-2">
+                                    <p className="text-xs font-bold text-[#9A978F] mb-1">Pre-Ordered Items:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {order.items?.map((item, idx) => (
+                                        <span key={idx} className="bg-[#0a140c] px-3 py-1 rounded-full text-xs border border-[#263629] font-medium text-[#FAF9F5]">
+                                          {item.name} × <strong className="text-[#05c92f]">{item.qty}</strong> (<span className="text-[#E5C158]">₹{item.price * item.qty}</span>)
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {order.notes && (
+                                    <p className="text-xs text-[#9A978F] italic pt-1 flex items-center gap-1.5">
+                                      <FaNoteSticky className="text-xs text-[#E5C158] shrink-0" />
+                                      <span>Note: {order.notes}</span>
+                                    </p>
+                                  )}
+                                </div>
+
+                                {/* Status & Controls */}
+                                <div className="flex flex-col items-end gap-2 w-full md:w-auto border-t md:border-t-0 border-[#263629] pt-3 md:pt-0">
+                                  <span className="text-xl font-extrabold text-[#E5C158]">₹{order.totalAmount}</span>
+
+                                  <div className="flex items-center gap-2">
+                                    <select
+                                      value={order.status || "Pending"}
+                                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                                      className={`text-xs font-bold px-3 py-1.5 rounded-full border focus:outline-none cursor-pointer ${
+                                        order.status === "Completed"
+                                          ? "bg-green-600 text-white border-green-400"
+                                          : order.status === "Confirmed"
+                                          ? "bg-blue-600 text-white border-blue-400"
+                                          : order.status === "Cancelled"
+                                          ? "bg-red-600 text-white border-red-400"
+                                          : "bg-yellow-500 text-[#0f110f] border-yellow-400"
+                                      }`}
+                                    >
+                                      <option value="Pending">● Pending</option>
+                                      <option value="Confirmed">● Confirmed</option>
+                                      <option value="Completed">● Completed</option>
+                                      <option value="Cancelled">● Cancelled</option>
+                                    </select>
+
+                                    <button
+                                      onClick={() => setDeletingOrderId(order.id)}
+                                      className="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-red-500/40 transition flex items-center gap-1"
+                                      title="Delete Order"
+                                    >
+                                      <FaTrashCan className="w-3 h-3" />
+                                      <span>Delete</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
+                /* FLAT ORDERS LIST VIEW */
                 <div className="space-y-4">
-                  {orders.map((order) => (
+                  {filteredOrders.map((order) => (
                     <div
                       key={order.id}
                       className="bg-[#0a140c] p-5 rounded-[.75rem] border border-[#263629] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm"
@@ -361,12 +697,12 @@ export default function AdminDashboardPage() {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3 text-xs text-[#E5C158]">
-                          <span className="inline-flex items-center gap-1">
+                          <span className="inline-flex items-center gap-1 font-bold">
                             <FaCalendarDays className="text-[10px] text-[#05c92f]" />
                             <span>Date: <strong>{formatBookingDateText(order.bookingDate)}</strong></span>
                           </span>
                           <span>•</span>
-                          <span className="inline-flex items-center gap-1">
+                          <span className="inline-flex items-center gap-1 font-bold">
                             <FaClock className="text-[10px] text-[#05c92f]" />
                             <span>Time: <strong>{order.timeSlot}</strong></span>
                           </span>
@@ -880,6 +1216,29 @@ export default function AdminDashboardPage() {
       )}
 
       {/* DELETE CONFIRMATION MODALS */}
+      {deletingOrderId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-[#E5C158]">Delete Order Log?</h3>
+            <p className="text-xs text-[#9A978F]">This will permanently delete this pre-order log from Firebase.</p>
+            <div className="flex justify-center gap-3 pt-2">
+              <button
+                onClick={() => setDeletingOrderId(null)}
+                className="px-4 py-2 rounded-full border border-[#263629] text-xs font-bold text-[#9A978F]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteOrder(deletingOrderId)}
+                className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow"
+              >
+                Delete Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {deletingMenuItemId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="bg-[#162118] border border-[#263629] rounded-[.75rem] p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">

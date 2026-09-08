@@ -1,3 +1,6 @@
+import { db } from "./firebase";
+import { collection, addDoc, getDocs, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+
 // Format dates to DD Month YYYY text format (e.g. 8th Sept, 2026)
 export function formatBookingDateText(dateStr) {
   if (!dateStr) return "";
@@ -50,18 +53,35 @@ export async function saveOrderToFirestore(orderData) {
   }
 }
 
-// Subscribe to real-time order updates for Admin Dashboard
+// Subscribe to real-time order updates for Admin Dashboard with fallback for index building
 export function subscribeToOrders(callback) {
   try {
     const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-    return onSnapshot(q, (snapshot) => {
-      const orders = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        formattedTime: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toLocaleString() : new Date().toLocaleString(),
-      }));
-      callback(orders);
-    });
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const orders = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          formattedTime: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toLocaleString() : new Date().toLocaleString(),
+        }));
+        callback(orders);
+      },
+      (error) => {
+        console.warn("Ordered snapshot failed, falling back to simple collection query:", error);
+        // Fallback to query without orderBy if index is missing or building
+        return onSnapshot(collection(db, "orders"), (snapshot) => {
+          const orders = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            formattedTime: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toLocaleString() : new Date().toLocaleString(),
+          }));
+          // Sort client-side
+          orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+          callback(orders);
+        });
+      }
+    );
   } catch (error) {
     console.error("Error subscribing to orders: ", error);
     callback([]);
