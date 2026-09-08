@@ -95,3 +95,19 @@ export async function deleteBannerFromFirestore(bannerId) {
     return { success: false, error: error.message };
   }
 }
+
+// Reorder Banners Batch in Firestore
+export async function reorderBannersInFirestore(bannersList) {
+  try {
+    for (let i = 0; i < bannersList.length; i++) {
+      const banner = bannersList[i];
+      const bannerRef = doc(db, "banners", banner.id);
+      await setDoc(bannerRef, { order: i + 1, updatedAt: serverTimestamp() }, { merge: true });
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error reordering banners: ", error);
+    return { success: false, error: error.message };
+  }
+}
+

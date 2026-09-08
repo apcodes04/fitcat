@@ -16,11 +16,13 @@ import {
   subscribeToMenuItems,
   saveMenuItemToFirestore,
   deleteMenuItemFromFirestore,
+  reorderMenuItemsInFirestore,
 } from "@/lib/menu";
 import {
   subscribeToBanners,
   saveBannerToFirestore,
   deleteBannerFromFirestore,
+  reorderBannersInFirestore,
 } from "@/lib/banners";
 
 // Modular Admin UI Components (AcadBytes Dark System)
@@ -48,6 +50,8 @@ import {
   FaUserGroup,
   FaListUl,
   FaUtensils,
+  FaArrowUp,
+  FaArrowDown,
 } from "react-icons/fa6";
 import { MdOutlineRestaurantMenu } from "react-icons/md";
 
@@ -259,6 +263,44 @@ export default function AdminDashboardPage() {
       image: "",
       order: banners.length + 1,
     });
+  };
+
+  const handleMoveBanner = async (index, direction) => {
+    if (
+      (direction === "up" && index === 0) ||
+      (direction === "down" && index === banners.length - 1)
+    ) {
+      return;
+    }
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    const updatedBanners = [...banners];
+    const temp = updatedBanners[index];
+    updatedBanners[index] = updatedBanners[targetIndex];
+    updatedBanners[targetIndex] = temp;
+
+    setBanners(updatedBanners);
+    await reorderBannersInFirestore(updatedBanners);
+    setStatusMessage("Banner display order updated live!");
+    setTimeout(() => setStatusMessage(""), 3000);
+  };
+
+  const handleMoveMenuItem = async (index, direction) => {
+    if (
+      (direction === "up" && index === 0) ||
+      (direction === "down" && index === menuItems.length - 1)
+    ) {
+      return;
+    }
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    const updatedItems = [...menuItems];
+    const temp = updatedItems[index];
+    updatedItems[index] = updatedItems[targetIndex];
+    updatedItems[targetIndex] = temp;
+
+    setMenuItems(updatedItems);
+    await reorderMenuItemsInFirestore(updatedItems);
+    setStatusMessage("Menu rank order updated live!");
+    setTimeout(() => setStatusMessage(""), 3000);
   };
 
   const handleLogout = async () => {
@@ -715,8 +757,28 @@ export default function AdminDashboardPage() {
                           {item.category || "General"}
                         </span>
                         <span className="text-xs font-semibold text-[#faf9f5] bg-[#0a0c0a] px-2.5 py-1 rounded-full border border-[#262a26]">
-                          Rank #{item.displayOrder || idx + 1}
+                          Rank #{idx + 1}
                         </span>
+                        <div className="flex items-center gap-1 ml-1">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => handleMoveMenuItem(idx, "up")}
+                            className="bg-[#0a0c0a] hover:bg-[#262a26] disabled:opacity-30 text-[#faf9f5] p-1 rounded border border-[#262a26] text-xs transition"
+                            title="Move Rank Up"
+                          >
+                            <FaArrowUp className="w-2.5 h-2.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === menuItems.length - 1}
+                            onClick={() => handleMoveMenuItem(idx, "down")}
+                            className="bg-[#0a0c0a] hover:bg-[#262a26] disabled:opacity-30 text-[#faf9f5] p-1 rounded border border-[#262a26] text-xs transition"
+                            title="Move Rank Down"
+                          >
+                            <FaArrowDown className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <button
@@ -819,9 +881,32 @@ export default function AdminDashboardPage() {
                         <img src={banner.image} alt={banner.title} className="w-full h-full object-contain" />
                       </div>
                     )}
-                    <span className="text-xs font-semibold text-[#05c92f] bg-[#0e2413] px-2.5 py-0.5 rounded-full border border-[#1b4224] inline-block mb-2">
-                      Banner #{banner.order || idx + 1}
-                    </span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-[#05c92f] bg-[#0e2413] px-2.5 py-1 rounded-full border border-[#1b4224]">
+                        Image #{idx + 1} {idx === 0 ? "(Displays 1st)" : ""}
+                      </span>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => handleMoveBanner(idx, "up")}
+                          className="bg-[#0a0c0a] hover:bg-[#262a26] disabled:opacity-30 text-[#faf9f5] p-1.5 rounded-md border border-[#262a26] text-xs transition"
+                          title="Move Up"
+                        >
+                          <FaArrowUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === banners.length - 1}
+                          onClick={() => handleMoveBanner(idx, "down")}
+                          className="bg-[#0a0c0a] hover:bg-[#262a26] disabled:opacity-30 text-[#faf9f5] p-1.5 rounded-md border border-[#262a26] text-xs transition"
+                          title="Move Down"
+                        >
+                          <FaArrowDown className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
                     <h3 className="text-base font-semibold text-[#faf9f5] mb-1">
                       {banner.title || "Promotional Banner"}
                     </h3>
@@ -1082,15 +1167,18 @@ export default function AdminDashboardPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Sequence Order (#)</label>
-                <input
-                  type="number"
-                  required
-                  min={1}
+                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Display Sequence / Position</label>
+                <select
                   value={editingBanner.order || 1}
                   onChange={(e) => setEditingBanner({ ...editingBanner, order: Number(e.target.value) })}
-                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-sm text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
-                />
+                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-xs text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
+                >
+                  {Array.from({ length: Math.max(banners.length + 1, editingBanner.order || 1) }, (_, i) => i + 1).map((pos) => (
+                    <option key={pos} value={pos}>
+                      Position #{pos} {pos === 1 ? "(Displays 1st on Website Carousel)" : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

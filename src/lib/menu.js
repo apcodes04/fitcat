@@ -148,3 +148,19 @@ export async function deleteMenuItemFromFirestore(itemId) {
     return { success: false, error: error.message };
   }
 }
+
+// Reorder Menu Items Batch in Firestore
+export async function reorderMenuItemsInFirestore(itemsList) {
+  try {
+    for (let i = 0; i < itemsList.length; i++) {
+      const item = itemsList[i];
+      const itemRef = doc(db, "menu", item.id);
+      await setDoc(itemRef, { displayOrder: i + 1, updatedAt: serverTimestamp() }, { merge: true });
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error reordering menu items: ", error);
+    return { success: false, error: error.message };
+  }
+}
+

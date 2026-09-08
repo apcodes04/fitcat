@@ -137,7 +137,7 @@ export default function MobileView() {
 
       {/* Promotional Banner Scrollable Carousel */}
       <section className="px-4 pt-2 pb-1">
-        <BannerCarousel />
+        <BannerCarousel onPreOrder={handlePreOrder} />
       </section>
 
       {/* Food Menu Section */}

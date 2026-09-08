@@ -156,7 +156,7 @@ export default function DesktopView() {
         <div className="max-w-7xl mx-auto space-y-10">
           {/* Scrollable Promotional Banner Showcase */}
           <div className="max-w-4xl mx-auto">
-            <BannerCarousel />
+            <BannerCarousel onPreOrder={handlePreOrder} />
           </div>
 
           <div className="text-center max-w-2xl mx-auto">
