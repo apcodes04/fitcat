@@ -96,25 +96,28 @@ export async function deleteBannerFromFirestore(bannerId) {
   }
 }
 
-// Reorder Menu Card Images DIRECTLY in Cloud Firestore with full payload
+// Reorder Menu Card Images DIRECTLY in Cloud Firestore with sanitized clean primitives
 export async function reorderBannersInFirestore(bannersList) {
   try {
-    const promises = bannersList.map((banner, index) => {
+    for (let i = 0; i < bannersList.length; i++) {
+      const banner = bannersList[i];
+      if (!banner || !banner.id) continue;
       const bannerRef = doc(db, "menu", banner.id);
-      return setDoc(
-        bannerRef,
-        {
-          ...banner,
-          id: banner.id,
-          order: index + 1,
-          displayOrder: index + 1,
-          isBanner: true,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
-    });
-    await Promise.all(promises);
+
+      const updateData = {
+        id: banner.id,
+        order: i + 1,
+        displayOrder: i + 1,
+        isBanner: true,
+      };
+
+      if (typeof banner.title === "string") updateData.title = banner.title;
+      if (typeof banner.image === "string" && banner.image.trim() !== "") {
+        updateData.image = banner.image;
+      }
+
+      await setDoc(bannerRef, updateData, { merge: true });
+    }
     return { success: true };
   } catch (error) {
     console.error("Error reordering menu card posters in Firestore: ", error);

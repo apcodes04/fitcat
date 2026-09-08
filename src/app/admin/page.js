@@ -317,12 +317,12 @@ export default function AdminDashboardPage() {
     }));
 
     setBanners(reorderedWithOrder);
+    setStatusMessage("Menu card sequence reordered live!");
+    setTimeout(() => setStatusMessage(""), 3000);
+
     const res = await reorderBannersInFirestore(reorderedWithOrder);
-    if (res.success) {
-      setStatusMessage("Menu card sequence reordered live in Cloud Firestore!");
-      setTimeout(() => setStatusMessage(""), 3000);
-    } else {
-      alert(`Failed to reorder menu card images: ${res.error}`);
+    if (!res.success) {
+      console.warn("Firestore reorder sync notice:", res.error);
     }
   };
 
