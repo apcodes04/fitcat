@@ -151,14 +151,14 @@ export default function DesktopView() {
         </div>
       </section>
 
-      {/* Desktop Menu Grid Section */}
-      <section id="menu" className="px-8 py-16 bg-[#0a140c] border-t border-b border-[#263629]">
-        <div className="max-w-7xl mx-auto space-y-10">
-          {/* Scrollable Promotional Banner Showcase */}
-          <div className="max-w-4xl mx-auto">
-            <BannerCarousel onPreOrder={handlePreOrder} />
-          </div>
+      {/* Promotional Banner Showcase (Between Pre-Order & FITCAT MENU) */}
+      <section className="px-8 py-4 max-w-4xl mx-auto">
+        <BannerCarousel onPreOrder={handlePreOrder} />
+      </section>
 
+      {/* Desktop Menu Grid Section */}
+      <section id="menu" className="px-8 py-12 bg-[#0a140c] border-t border-b border-[#263629]">
+        <div className="max-w-7xl mx-auto space-y-10">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold text-[#E5C158] tracking-wider uppercase">FITCAT MENU</h2>
             <p className="text-[#9A978F] text-sm mt-2">

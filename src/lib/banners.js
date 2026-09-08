@@ -31,13 +31,18 @@ export function subscribeToBanners(callback) {
     const bannersRef = collection(db, "banners");
     return onSnapshot(bannersRef, async (snapshot) => {
       if (snapshot.empty) {
-        // Seed default banners if collection is empty
+        // Seed default banners if collection is empty & pass default immediately
+        callback(DEFAULT_BANNERS);
         await seedDefaultBanners();
       } else {
-        const banners = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const banners = snapshot.docs.map((doc, idx) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            order: Number(data.order || idx + 1),
+          };
+        });
         // Sort by order
         banners.sort((a, b) => (a.order || 0) - (b.order || 0));
         callback(banners);

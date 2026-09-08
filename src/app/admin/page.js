@@ -55,8 +55,8 @@ import {
 } from "react-icons/fa6";
 import { MdOutlineRestaurantMenu } from "react-icons/md";
 
-// Client-side WebP Image Compressor for Ultra-Fast Loading
-const compressAndResizeImage = (file, maxWidth = 800, quality = 0.75) => {
+// Client-side WebP/JPEG Image Compressor for Ultra-Fast Loading & Reliable Mobile Uploads
+const compressAndResizeImage = (file, maxWidth = 800, quality = 0.65) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -78,8 +78,20 @@ const compressAndResizeImage = (file, maxWidth = 800, quality = 0.75) => {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
 
-        const compressedDataUrl = canvas.toDataURL("image/webp", quality);
-        resolve(compressedDataUrl);
+        let dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+        // If string exceeds 500KB, scale down further to guarantee Firestore save success on mobile
+        if (dataUrl.length > 500000) {
+          const smallCanvas = document.createElement("canvas");
+          const scale = 600 / Math.max(width, 1);
+          smallCanvas.width = 600;
+          smallCanvas.height = Math.round(height * scale);
+          const sCtx = smallCanvas.getContext("2d");
+          sCtx.drawImage(img, 0, 0, smallCanvas.width, smallCanvas.height);
+          dataUrl = smallCanvas.toDataURL("image/jpeg", 0.55);
+        }
+
+        resolve(dataUrl);
       };
       img.onerror = (err) => reject(err);
     };
@@ -100,6 +112,7 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [banners, setBanners] = useState([]);
+  const [isCompressingBanner, setIsCompressingBanner] = useState(false);
 
   // Modals state
   const [editingOrder, setEditingOrder] = useState(null);
@@ -242,10 +255,18 @@ export default function AdminDashboardPage() {
   const handleSaveBanner = async (e) => {
     e.preventDefault();
     if (!editingBanner) return;
-    await saveBannerToFirestore(editingBanner);
-    setEditingBanner(null);
-    setStatusMessage("Promotional banner saved & published live!");
-    setTimeout(() => setStatusMessage(""), 3000);
+    if (!editingBanner.image || editingBanner.image.trim() === "") {
+      alert("Please select a poster image file before saving!");
+      return;
+    }
+    const res = await saveBannerToFirestore(editingBanner);
+    if (res.success) {
+      setEditingBanner(null);
+      setStatusMessage("Promotional banner saved & published live!");
+      setTimeout(() => setStatusMessage(""), 3000);
+    } else {
+      alert(`Failed to save banner image: ${res.error}`);
+    }
   };
 
   const handleDeleteBanner = async (bannerId) => {
@@ -1167,21 +1188,6 @@ export default function AdminDashboardPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Display Sequence / Position</label>
-                <select
-                  value={editingBanner.order || 1}
-                  onChange={(e) => setEditingBanner({ ...editingBanner, order: Number(e.target.value) })}
-                  className="w-full bg-[#0a0c0a] border border-[#262a26] rounded-lg p-2.5 text-xs text-[#faf9f5] focus:outline-none focus:border-[#05c92f]"
-                >
-                  {Array.from({ length: Math.max(banners.length + 1, editingBanner.order || 1) }, (_, i) => i + 1).map((pos) => (
-                    <option key={pos} value={pos}>
-                      Position #{pos} {pos === 1 ? "(Displays 1st on Website Carousel)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-xs font-semibold text-[#faf9f5] mb-1">Banner Poster Image</label>
                 <input
                   type="file"
@@ -1190,19 +1196,28 @@ export default function AdminDashboardPage() {
                     const file = e.target.files?.[0];
                     if (file) {
                       try {
-                        const compressed = await compressAndResizeImage(file, 1000, 0.8);
+                        setIsCompressingBanner(true);
+                        const compressed = await compressAndResizeImage(file, 800, 0.65);
                         setEditingBanner((prev) => ({ ...prev, image: compressed }));
                       } catch (err) {
                         console.error("Banner compression error:", err);
+                        alert("Error processing image file. Please try another photo.");
+                      } finally {
+                        setIsCompressingBanner(false);
                       }
                     }
                   }}
                   className="w-full text-xs text-[#9a978f] file:mr-3 file:py-1.5 file:px-3.5 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#05c92f] file:text-[#0f110f] hover:file:bg-[#3ade5c] cursor-pointer bg-[#0a0c0a] border border-[#262a26] rounded-lg p-1.5"
                 />
+                {isCompressingBanner && (
+                  <p className="text-[11px] text-[#05c92f] animate-pulse mt-1 font-semibold">
+                    ⚡ Optimizing image for ultra-fast mobile loading...
+                  </p>
+                )}
               </div>
 
-              {editingBanner.image && (
-                <div className="w-full h-36 rounded-lg overflow-hidden border border-[#262a26] bg-[#0a0c0a] flex items-center justify-center p-1">
+              {editingBanner.image && !isCompressingBanner && (
+                <div className="w-full h-44 rounded-lg overflow-hidden border border-[#262a26] bg-[#0a0c0a] flex items-center justify-center p-1">
                   <img src={editingBanner.image} alt="banner preview" className="w-full h-full object-contain" />
                 </div>
               )}
@@ -1217,9 +1232,10 @@ export default function AdminDashboardPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-full bg-[#05c92f] hover:bg-[#3ade5c] text-[#0f110f] text-xs font-semibold shadow transition"
+                  disabled={isCompressingBanner}
+                  className="px-5 py-2 rounded-full bg-[#05c92f] hover:bg-[#3ade5c] disabled:opacity-50 text-[#0f110f] text-xs font-semibold shadow transition"
                 >
-                  Save & Publish Banner
+                  {isCompressingBanner ? "Processing Image..." : "Save & Publish Banner"}
                 </button>
               </div>
             </form>
