@@ -1,13 +1,14 @@
 "use client";
 
 import { formatBookingDateText } from "@/lib/orders";
-import { FaPhone, FaCalendarDays, FaClock, FaNoteSticky, FaTrashCan, FaChevronDown, FaChevronUp } from "react-icons/fa6";
+import { FaPhone, FaCalendarDays, FaClock, FaNoteSticky, FaTrashCan, FaPenToSquare, FaChevronDown, FaChevronUp } from "react-icons/fa6";
 
 export default function AdminCustomerGroupCard({
   group,
   isExpanded,
   onToggleExpand,
   onStatusChange,
+  onEditOrder,
   onDeleteOrder,
 }) {
   return (
@@ -47,7 +48,7 @@ export default function AdminCustomerGroupCard({
         <div className="flex items-center gap-5 shrink-0">
           <div className="text-right">
             <span className="text-[11px] text-[#9a978f] block uppercase tracking-wider font-medium">Total Spent</span>
-            <span className="text-base font-semibold text-[#05c92f] tabular-nums">₹{group.totalSpent}</span>
+            <span className="text-base font-extrabold text-yellow-400 tabular-nums">₹{group.totalSpent}</span>
           </div>
           <div className="text-right hidden sm:block">
             <span className="text-[11px] text-[#9a978f] block uppercase tracking-wider font-medium">Items Pre-Ordered</span>
@@ -92,7 +93,7 @@ export default function AdminCustomerGroupCard({
                         className="bg-[#0a0c0a] px-3 py-1 rounded-full text-xs border border-[#262a26] font-medium text-[#faf9f5]"
                       >
                         {item.name} × <strong className="text-[#05c92f]">{item.qty}</strong> (
-                        <span className="text-[#9a978f]">₹{item.price * item.qty}</span>)
+                        <span className="text-yellow-400 font-extrabold">₹{item.price * item.qty}</span>)
                       </span>
                     ))}
                   </div>
@@ -106,11 +107,21 @@ export default function AdminCustomerGroupCard({
                 )}
               </div>
 
-              {/* Amount, Status Dropdown & Delete */}
+              {/* Amount, Orange Edit Button, Status Dropdown & Delete */}
               <div className="flex flex-col items-end gap-2 w-full md:w-auto border-t md:border-t-0 border-[#262a26] pt-3 md:pt-0 shrink-0">
-                <span className="text-xl font-semibold text-[#05c92f] tabular-nums">₹{order.totalAmount}</span>
+                <span className="text-xl font-extrabold text-yellow-400 tabular-nums">₹{order.totalAmount}</span>
 
                 <div className="flex items-center gap-2">
+                  {/* ORANGE EDIT ORDER BUTTON */}
+                  <button
+                    onClick={() => onEditOrder && onEditOrder(order)}
+                    className="bg-orange-600/20 hover:bg-orange-600 text-orange-300 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-orange-500/40 transition flex items-center gap-1.5 shadow-sm"
+                    title="Edit Order Details & Quantities"
+                  >
+                    <FaPenToSquare className="w-3 h-3 text-orange-400" />
+                    <span>Edit</span>
+                  </button>
+
                   <select
                     value={order.status || "Pending"}
                     onChange={(e) => onStatusChange(order.id, e.target.value)}

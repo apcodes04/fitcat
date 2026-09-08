@@ -28,6 +28,7 @@ import AdminDateFilterModule from "@/components/admin/AdminDateFilterModule";
 import AdminStatsGrid from "@/components/admin/AdminStatsGrid";
 import AdminItemDemandRanking from "@/components/admin/AdminItemDemandRanking";
 import AdminCustomerGroupCard from "@/components/admin/AdminCustomerGroupCard";
+import AdminEditOrderModal from "@/components/admin/AdminEditOrderModal";
 
 import {
   FaChartSimple,
@@ -97,6 +98,7 @@ export default function AdminDashboardPage() {
   const [banners, setBanners] = useState([]);
 
   // Modals state
+  const [editingOrder, setEditingOrder] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [editingBanner, setEditingBanner] = useState(null);
   const [deletingOrderId, setDeletingOrderId] = useState(null);
@@ -522,7 +524,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Orders List / Empty State */}
               {filteredOrders.length === 0 ? (
                 <div className="text-center py-16 text-[#9a978f] text-xs space-y-3">
                   <FaMobileScreen className="text-4xl mx-auto text-[#05c92f]" />
@@ -540,6 +541,7 @@ export default function AdminDashboardPage() {
                       isExpanded={expandedCustomers[group.customerName] !== true} // expanded by default
                       onToggleExpand={() => toggleCustomerExpand(group.customerName)}
                       onStatusChange={handleStatusChange}
+                      onEditOrder={(orderToEdit) => setEditingOrder(orderToEdit)}
                       onDeleteOrder={(orderId) => setDeletingOrderId(orderId)}
                     />
                   ))}
@@ -592,7 +594,7 @@ export default function AdminDashboardPage() {
                                 className="bg-[#171a17] px-3 py-1 rounded-full text-xs border border-[#262a26] font-medium text-[#faf9f5]"
                               >
                                 {item.name} × <strong className="text-[#05c92f]">{item.qty}</strong> (
-                                <span className="text-[#9a978f]">₹{item.price * item.qty}</span>)
+                                <span className="text-yellow-400 font-extrabold">₹{item.price * item.qty}</span>)
                               </span>
                             ))}
                           </div>
@@ -606,12 +608,23 @@ export default function AdminDashboardPage() {
                         )}
                       </div>
 
+                      {/* Amount, Orange Edit Button, Status Dropdown & Delete */}
                       <div className="flex flex-col items-end gap-2 w-full md:w-auto border-t md:border-t-0 border-[#262a26] pt-3 md:pt-0 shrink-0">
-                        <span className="text-xl font-semibold text-[#05c92f] tabular-nums">
+                        <span className="text-xl font-extrabold text-yellow-400 tabular-nums">
                           ₹{order.totalAmount}
                         </span>
 
                         <div className="flex items-center gap-2">
+                          {/* ORANGE EDIT BUTTON */}
+                          <button
+                            onClick={() => setEditingOrder(order)}
+                            className="bg-orange-600/20 hover:bg-orange-600 text-orange-300 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-orange-500/40 transition flex items-center gap-1.5 shadow-sm"
+                            title="Edit Order Details & Items"
+                          >
+                            <FaPenToSquare className="w-3 h-3 text-orange-400" />
+                            <span>Edit</span>
+                          </button>
+
                           <select
                             value={order.status || "Pending"}
                             onChange={(e) => handleStatusChange(order.id, e.target.value)}
@@ -1124,6 +1137,19 @@ export default function AdminDashboardPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* EDIT ORDER TICKET MODAL */}
+      {editingOrder && (
+        <AdminEditOrderModal
+          order={editingOrder}
+          menuItems={menuItems}
+          onClose={() => setEditingOrder(null)}
+          onOrderUpdated={(msg) => {
+            setStatusMessage(msg);
+            setTimeout(() => setStatusMessage(""), 3000);
+          }}
+        />
       )}
 
       {/* DELETE CONFIRMATION MODALS */}
