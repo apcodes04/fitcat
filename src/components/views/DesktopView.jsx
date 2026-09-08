@@ -42,13 +42,13 @@ export default function DesktopView() {
         </div>
         <div className="flex items-center gap-4">
           <a
-            href="https://api.whatsapp.com/send?phone=917977034609"
+            href="https://api.whatsapp.com/send?phone=919167030926"
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1.5 text-[#25D366] hover:underline font-bold"
           >
             <WhatsAppIcon className="w-4 h-4" color="#25D366" />
-            <span>+91 7977034609</span>
+            <span>+91 9167030926</span>
           </a>
           <span className="text-[#263629]">•</span>
           <a
@@ -229,7 +229,7 @@ export default function DesktopView() {
           <Logo className="h-16 w-auto" />
           <p>© {new Date().getFullYear()} Fitcat (fitcat.in). All rights reserved. Vikhroli East, Mumbai.</p>
           <div className="flex gap-6 items-center">
-            <a href="https://wa.me/917977034609" target="_blank" rel="noreferrer" className="hover:text-green-300 text-[#25D366] flex items-center gap-1.5 font-bold">
+            <a href="https://wa.me/919167030926" target="_blank" rel="noreferrer" className="hover:text-green-300 text-[#25D366] flex items-center gap-1.5 font-bold">
               <WhatsAppIcon className="w-4 h-4" color="#25D366" /> WhatsApp
             </a>
             <a href="https://instagram.com/fitcatmumbai" target="_blank" rel="noreferrer" className="hover:text-pink-300 text-[#E1306C] flex items-center gap-1.5 font-bold">

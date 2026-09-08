@@ -144,7 +144,7 @@ export default function PreOrderModal({ isOpen, onClose, initialItem = null }) {
       `-----------------------------\n` +
       `✨ Please confirm my pre-order! Eat Clean. Feel Great! 🌿`;
 
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=917977034609&text=${encodeURIComponent(text)}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=919167030926&text=${encodeURIComponent(text)}`;
 
     // 3. Guaranteed instant redirection to WhatsApp
     try {

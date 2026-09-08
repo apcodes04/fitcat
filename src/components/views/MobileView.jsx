@@ -64,13 +64,13 @@ export default function MobileView() {
           {/* Phone Number and Instagram Handle in a SINGLE LINE */}
           <div className="whitespace-nowrap flex items-center gap-1.5 text-[9px] sm:text-[10px] text-[#9A978F] font-bold mt-0.5">
             <a
-              href="https://api.whatsapp.com/send?phone=917977034609"
+              href="https://api.whatsapp.com/send?phone=919167030926"
               target="_blank"
               rel="noreferrer"
               className="text-[#25D366] hover:underline flex items-center gap-0.5 whitespace-nowrap"
             >
               <WhatsAppIcon className="w-2.5 h-2.5 flex-shrink-0" color="#25D366" />
-              <span>+91 7977034609</span>
+              <span>+91 9167030926</span>
             </a>
             <span className="text-[#263629]">•</span>
             <a

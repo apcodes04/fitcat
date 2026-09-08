@@ -65,9 +65,9 @@ export default function AboutPage() {
               </div>
               <div className="bg-[#0a140c] p-3 rounded-lg border border-[#263629]">
                 <span className="font-bold text-[#E5C158] block mb-0.5">💬 WhatsApp Order</span>
-                <a href="https://wa.me/917977034609" target="_blank" rel="noreferrer" className="text-xs font-bold text-[#25D366] hover:underline flex items-center gap-1.5 mt-0.5">
+                <a href="https://wa.me/919167030926" target="_blank" rel="noreferrer" className="text-xs font-bold text-[#25D366] hover:underline flex items-center gap-1.5 mt-0.5">
                   <WhatsAppIcon className="w-3.5 h-3.5" color="#25D366" />
-                  <span>+91 7977034609</span>
+                  <span>+91 9167030926</span>
                 </a>
               </div>
             </div>

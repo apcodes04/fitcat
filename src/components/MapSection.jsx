@@ -43,7 +43,7 @@ export default function MapSection() {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-fitcat-gold text-base">📞</span>
-            <a href="tel:+917977034609" className="hover:underline text-fitcat-cream font-semibold">+91 7977034609</a>
+            <a href="tel:+919167030926" className="hover:underline text-fitcat-cream font-semibold">+91 9167030926</a>
           </div>
         </div>
 
