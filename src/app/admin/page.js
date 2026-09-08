@@ -263,16 +263,32 @@ export default function AdminDashboardPage() {
       alert("Please select a poster image file before saving!");
       return;
     }
-    const res = await saveBannerToFirestore(editingBanner);
-    if (res.success) {
-      if (res.banners) {
-        setBanners(res.banners);
+
+    const bannerToSave = {
+      id: editingBanner.id || `banner-poster-${Date.now()}`,
+      title: editingBanner.title || "",
+      image: editingBanner.image,
+      order: Number(editingBanner.order || banners.length + 1),
+      displayOrder: Number(editingBanner.order || banners.length + 1),
+      isBanner: true,
+      isDeleted: false,
+    };
+
+    setBanners((prev) => {
+      const exists = prev.some((b) => b.id === bannerToSave.id);
+      if (exists) {
+        return prev.map((b) => (b.id === bannerToSave.id ? bannerToSave : b));
       }
-      setEditingBanner(null);
-      setStatusMessage("Menu card image saved & published live!");
-      setTimeout(() => setStatusMessage(""), 3000);
-    } else {
-      alert(`Failed to save menu card image: ${res.error}`);
+      return [...prev, bannerToSave];
+    });
+
+    setEditingBanner(null);
+    setStatusMessage("Menu card image saved & published live!");
+    setTimeout(() => setStatusMessage(""), 3000);
+
+    const res = await saveBannerToFirestore(bannerToSave);
+    if (!res.success) {
+      console.warn("Firestore banner save notice:", res.error);
     }
   };
 

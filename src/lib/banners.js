@@ -74,16 +74,21 @@ export async function saveBannerToFirestore(bannerData) {
     const bannerRef = doc(db, "menu", bannerId);
     const payload = {
       id: bannerId,
-      title: bannerData.title || "",
-      image: bannerData.image,
-      order: Number(bannerData.order || 1),
-      displayOrder: Number(bannerData.order || 1),
+      title: typeof bannerData.title === "string" ? bannerData.title : "",
+      image: String(bannerData.image || ""),
+      order: Number(bannerData.order || bannerData.displayOrder || 1),
+      displayOrder: Number(bannerData.displayOrder || bannerData.order || 1),
       isBanner: true,
       isDeleted: false,
-      updatedAt: serverTimestamp(),
     };
 
-    await setDoc(bannerRef, payload, { merge: true });
+    try {
+      await setDoc(bannerRef, { ...payload, updatedAt: serverTimestamp() }, { merge: true });
+    } catch (tsErr) {
+      console.warn("setDoc with serverTimestamp failed, retrying without timestamp:", tsErr.message);
+      await setDoc(bannerRef, payload, { merge: true });
+    }
+
     return { success: true, id: bannerId };
   } catch (error) {
     console.error("Error saving menu card poster to Firestore: ", error);
