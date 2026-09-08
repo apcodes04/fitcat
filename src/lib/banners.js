@@ -95,19 +95,20 @@ export async function deleteBannerFromFirestore(bannerId) {
 // Reorder Menu Card Images DIRECTLY in Cloud Firestore
 export async function reorderBannersInFirestore(bannersList) {
   try {
-    for (let i = 0; i < bannersList.length; i++) {
-      const banner = bannersList[i];
+    const promises = bannersList.map((banner, index) => {
       const bannerRef = doc(db, "menu", banner.id);
-      await setDoc(
+      return setDoc(
         bannerRef,
         {
-          order: i + 1,
+          order: index + 1,
+          displayOrder: index + 1,
           isBanner: true,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
-    }
+    });
+    await Promise.all(promises);
     return { success: true };
   } catch (error) {
     console.error("Error reordering menu card posters in Firestore: ", error);

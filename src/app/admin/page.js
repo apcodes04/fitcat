@@ -310,10 +310,20 @@ export default function AdminDashboardPage() {
     updatedBanners[index] = updatedBanners[targetIndex];
     updatedBanners[targetIndex] = temp;
 
-    setBanners(updatedBanners);
-    await reorderBannersInFirestore(updatedBanners);
-    setStatusMessage("Banner display order updated live!");
-    setTimeout(() => setStatusMessage(""), 3000);
+    const reorderedWithOrder = updatedBanners.map((item, i) => ({
+      ...item,
+      order: i + 1,
+      displayOrder: i + 1,
+    }));
+
+    setBanners(reorderedWithOrder);
+    const res = await reorderBannersInFirestore(reorderedWithOrder);
+    if (res.success) {
+      setStatusMessage("Menu card sequence reordered live in Cloud Firestore!");
+      setTimeout(() => setStatusMessage(""), 3000);
+    } else {
+      alert(`Failed to reorder menu card images: ${res.error}`);
+    }
   };
 
   const handleMoveMenuItem = async (index, direction) => {
@@ -329,10 +339,20 @@ export default function AdminDashboardPage() {
     updatedItems[index] = updatedItems[targetIndex];
     updatedItems[targetIndex] = temp;
 
-    setMenuItems(updatedItems);
-    await reorderMenuItemsInFirestore(updatedItems);
-    setStatusMessage("Menu rank order updated live!");
-    setTimeout(() => setStatusMessage(""), 3000);
+    const reorderedWithRank = updatedItems.map((item, i) => ({
+      ...item,
+      displayOrder: i + 1,
+      order: i + 1,
+    }));
+
+    setMenuItems(reorderedWithRank);
+    const res = await reorderMenuItemsInFirestore(reorderedWithRank);
+    if (res.success) {
+      setStatusMessage("Menu rank order updated live in Cloud Firestore!");
+      setTimeout(() => setStatusMessage(""), 3000);
+    } else {
+      alert(`Failed to reorder menu items: ${res.error}`);
+    }
   };
 
   const handleLogout = async () => {
